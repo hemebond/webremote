@@ -1,0 +1,29 @@
+$def with (content)
+
+<html>
+	<head>
+		<title>$content.title</title>
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<meta name="viewport" content="user-scalable=false">
+
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+		<script src="/static/js/base.js" type="text/javascript"></script>
+		$if "scripts" in content:
+			$for script in content.scripts.split(" "):
+				<script src="$script" type="text/javascript"></script>
+
+
+		<link href="/static/themes/dark/theme.css" rel="stylesheet" type="text/css" media="screen">
+		$if "css" in content:
+			$for css in content.css.split(" "):
+				<link href="$css" rel="stylesheet" type="text/css" media="screen">
+	</head>
+	<body>
+		<div id="header">
+			<h1>$content.title</h1>
+		</div>
+
+$:content
+
+	</body>
+</html>
