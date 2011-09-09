@@ -106,7 +106,7 @@ class Player:
 			if status.has_key("Metadata"):
 				if status['Metadata'].has_key("mpris:artUrl"):
 					import base64, urllib2
-					image_file = urllib2.urlopen(status['Metadata']['mpris:artUrl'])
+					image_file = urllib2.urlopen(str(status['Metadata']['mpris:artUrl']))
 					binary_data = image_file.read()
 					image_file.close()
 					b64_data = base64.b64encode(binary_data)
