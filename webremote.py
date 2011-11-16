@@ -105,12 +105,16 @@ class Player:
 
 			if status.has_key("Metadata"):
 				if status['Metadata'].has_key("mpris:artUrl"):
-					import base64, urllib2
+					import base64, urllib2, Image, StringIO
 					image_file = urllib2.urlopen(str(status['Metadata']['mpris:artUrl']))
-					binary_data = image_file.read()
-					image_file.close()
-					b64_data = base64.b64encode(binary_data)
+					image_string = StringIO.StringIO(image_file.read())
+					image_object = Image.open(image_string)
+					image_object.thumbnail((256,256),Image.BILINEAR)
+					image_buffer = StringIO.StringIO()
+					image_object.save(image_buffer, format="JPEG")
+					b64_data = base64.b64encode(image_buffer.getvalue())
 					status['Metadata']['mpris:artUrl'] = b64_data
+					image_file.close()
 
 			if requested_mimetype == "application/json":
 				web.header('Content-Type', "application/json")
