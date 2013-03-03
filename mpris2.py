@@ -16,10 +16,12 @@
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
 import dbus, re, sys
+from utils import to_native_type
 
 mpris2_re = re.compile('^org\.mpris\.MediaPlayer2\.([^.]+)$')
 mpris2_object_path = "/org/mpris/MediaPlayer2"
 mpris2_interface = "org.mpris.MediaPlayer2"
+
 
 # From http://code.google.com/p/dbus-tools/
 # Transform dbus types into native types
@@ -41,18 +43,24 @@ def to_native_type(data):
 	else:
 		return int(data)
 
+def str2bool(value):
+	return {'true': True, 'false': False}[value.lower()]
+
+
 class PlayerNotRunning(Exception):
 	pass
 
-class Player:
+
+class Player(object):
+	INTERFACE = "%s.Player" % mpris2_interface
+
 	def __init__(self, bus_object):
-		self.dbus_interface = dbus.Interface(bus_object, dbus_interface=mpris2_interface + ".Player")
+		self.dbus_interface = dbus.Interface(bus_object, dbus_interface=self.INTERFACE)
 		self.dbus_properties = dbus.Interface(bus_object, dbus.PROPERTIES_IFACE)
 
 	def get_property(self, property_name):
-		interface = mpris2_interface + ".Player"
 		try:
-			property_value = to_native_type(self.dbus_properties.Get(interface, property_name))
+			property_value = to_native_type(self.dbus_properties.Get(self.INTERFACE, property_name))
 		except:
 			property_value = None
 
@@ -69,47 +77,122 @@ class Player:
 		return property_value
 
 	def set_property(self, property_name, new_value):
-		interface = mpris2_interface + ".Player"
-
 		if property_name == "Position":
 			metadata = self.get_property("Metadata")
 			if metadata.has_key("mpris:length"):
 				new_position = float(new_position) * float(metadata['mpris:length'])
 				self.dbus_interface.SetPosition(str(metadata['mpris:trackid']), new_position)
 		else:
-			self.dbus_properties.Set(interface, property_name, new_value)
+			self.dbus_properties.Set(self.INTERFACE, property_name, new_value)
 
 	def Next(self):
 		self.dbus_interface.Next()
 
-	def PlayPause(self):
-		self.dbus_interface.PlayPause()
-
 	def Previous(self):
 		self.dbus_interface.Previous()
 
-	def Status(self):
-		status = {}
+	def Pause(self):
+		self.dbus_interface.Pause()
 
-		metadata = self.get_property("Metadata")
-		if any(metadata):
-			status['Metadata'] = metadata
+	def PlayPause(self):
+		self.dbus_interface.PlayPause()
 
-#			Work-around for Clementine
-#			http://code.google.com/p/clementine-player/issues/detail?id=1058
-			artist = status['Metadata']['xesam:artist']
-			if isinstance(artist, (str, unicode)):
-				status['Metadata']['xesam:artist'] = [artist]
+	def Stop(self):
+		self.dbus_interface.Stop()
 
-		status['Position'] = self.get_property("Position")
-		status['PlaybackStatus'] = self.get_property("PlaybackStatus")
-		status['Shuffle'] = self.get_property("Shuffle")
-		status['LoopStatus'] = self.get_property("LoopStatus")
-		status['Volume'] = self.get_property("Volume")
-#		print status
-		return status
+	def Play(self):
+		self.dbus_interface.Play()
 
-class Remote:
+	def Seek(self, offset):
+		pass
+
+	def SetPosition(self, trackid, position):
+		# self.dbus_interface.SetPosition()
+		pass
+
+	def OpenUri(self, uri):
+		pass
+
+	@property
+	def PlaybackStatus(self):
+		return self.get_property("PlaybackStatus")
+
+	@property
+	def LoopStatus(self):
+		return self.get_property("LoopStatus")
+
+	@LoopStatus.setter
+	def LoopStatus(self, value):
+		self.set_property("LoopStatus", value)
+
+	@property
+	def Rate(self):
+		return self.get_property("Rate")
+
+	@Rate.setter
+	def Rate(self, value):
+		self.set_property("Rate", value)
+
+	@property
+	def Shuffle(self):
+		return self.get_property("Shuffle")
+
+	@Shuffle.setter
+	def Shuffle(self, value):
+		self.set_property("Shuffle", str2bool(value))
+
+	@property
+	def Metadata(self):
+		return self.get_property("Metadata")
+
+	@property
+	def Volume(self):
+		return self.get_property("Volume")
+
+	@Volume.setter
+	def Volume(self, value):
+		self.set_property("Volume")
+
+	@property
+	def Position(self):
+		return self.get_property("Position")
+
+	@property
+	def MinimumRate(self):
+		return self.get_property("MinimumRate")
+
+	@property
+	def MaximumRate(self):
+		return self.get_property("MaximumRate")
+
+	@property
+	def CanGoNext(self):
+		return self.get_property("CanGoNext")
+
+	@property
+	def CanGoPrevious(self):
+		return self.get_property("CanGoPrevious")
+
+	@property
+	def CanPlay(self):
+		return self.get_property("CanPlay")
+
+	@property
+	def CanPause(self):
+		return self.get_property("CanPause")
+
+	@property
+	def CanSeek(self):
+		return self.get_property("CanSeek")
+
+	@property
+	def CanControl(self):
+		return self.get_property("CanControl")
+
+
+class Application(object):
+	INTERFACE = mpris2_interface
+
 	def __init__(self, path):
 		self.bus = dbus.SessionBus()
 		self.path = path
@@ -119,24 +202,39 @@ class Remote:
 		except:
 			raise PlayerNotRunning()
 
-		self.dbus_interface = dbus.Interface(bus_object, dbus_interface=mpris2_interface)
+		self.dbus_interface = dbus.Interface(bus_object, dbus_interface=self.INTERFACE)
 		self.dbus_properties = dbus.Interface(bus_object, dbus.PROPERTIES_IFACE)
 		self.player = Player(bus_object)
 
-		self.Identity  = self.get_property("Identity")
-		self.CanQuit  = self.get_property("CanQuit")
-		self.CanRaise = self.get_property("CanRaise")
-
 	def get_property(self, property_name):
-		interface = mpris2_interface
-		return to_native_type(self.dbus_properties.Get(interface, property_name))
+		try:
+			value = self.dbus_properties.Get(self.INTERFACE, property_name)
+		except dbus.DBusException:
+			return None
+
+		return to_native_type(value)
 
 	def set_property(self, property_name, new_value):
-		interface = mpris2_interface
-		self.dbus_properties.Set(interface, property_name, new_value)
+		self.dbus_properties.Set(self.INTERFACE, property_name, new_value)
 
 	def Raise(self):
 		self.dbus_interface.Raise()
 
 	def Quit(self):
 		self.dbus_interface.Quit()
+
+	@property
+	def Identity(self):
+		return self.get_property("Identity")
+
+	@property
+	def CanQuit(self):
+		return self.get_property("CanQuit")
+
+	@property
+	def CanRaise(self):
+		return self.get_property("CanRaise")
+
+	@property
+	def CanSetFullscreen(self):
+		return self.get_property("CanSetFullscreen")

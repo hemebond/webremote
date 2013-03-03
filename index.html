@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<title>Web Remote</title>
+		<script src="static/libs/jquery-1.9.1/jquery-1.9.1.min.js" type="text/javascript"></script>
+		<script src="static/libs/canjs-1.1.4/can.jquery.min.js" type="text/javascript"></script>
+		<script src="static/libs/canjs-1.1.4/can.fixture.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var Todo = can.Model({
+				findAll: 'GET /todos',
+				findOne: 'GET /todos/{id}',
+				create: 'POST /todos',
+				update: 'PUT /todos/{id}',
+				destroy: 'DELETE /todos/{id}'
+			},{
+
+			});
+
+			can.fixture('GET /todos', function() {
+				return [{
+					id: 1,
+					name: "Do the dishes"
+				},{
+					id: 2,
+					name: "mow the lawn"
+				},{
+					id: 3,
+					name: "iron shirts"
+				}]
+			})
+		</script>
+	</head>
+	<body>
+		<h1>Hello World!</h1>
+		<p>Hello</p>
+	</body>
+</html>
