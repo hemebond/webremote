@@ -17,7 +17,7 @@
 
 import socket
 import argparse
-import web, re, dbus, json, sys, mimeparse, mpris2
+import re, dbus, json, sys, mimeparse, mpris2
 import cgi
 from urlparse import urlparse, parse_qsl
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
@@ -32,7 +32,7 @@ def get_application_list():
 	mpris2_bus_regex = re.compile('^org\.mpris\.MediaPlayer2\.([^.]+)$')
 	bus = dbus.SessionBus()
 	bus_names = bus.list_names()
-	applications = {}
+	applications = []
 
 	for path in bus_names:
 		match = mpris2_bus_regex.match(path)
@@ -41,26 +41,22 @@ def get_application_list():
 			application = mpris2.Application(path)
 			name = match.group(1)
 
-			if name not in applications:
-				applications[name] = {
-					'identity': application.Identity,
-					'bus': path,
+			applications.append({
+				'name': name,
+				'url': "/%s/" % name,
+				'Identity': application.Identity,
+				'bus': path,
+				'player': {
+					'url': "/%s/player/" % name,
+					'PlaybackStatus': application.player.PlaybackStatus,
 				}
+			})
 
 	return applications
 
 
 def get_player_root(handler, requested_mimetype):
 	pass
-
-
-def matches(regex, string, store_var=None):
-	m = re.match(regex, string)
-	if m:
-		if store_var is not None:
-			store_var = m
-		return True
-	return False
 
 
 # This class will handles any incoming request from the browser
@@ -71,21 +67,27 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			["text/html", "application/json"],
 			self.headers.get("accept")
 		)
+		output = None
 
-		if requested_mimetype == "application/json":
-			output = ""
-
-			if self.path == "/":
+		if self.path == "/":
+			if requested_mimetype == "application/json":
 				# return the dict of applications as a JSON array
 				# {"my_application": "My Application"}
 				output = json.dumps(get_application_list())
-			elif re.match('/(?P<application>\w+)/player/', self.path):
+			else:
+				return SimpleHTTPRequestHandler.do_GET(self)
+		elif re.match('/static/', self.path):
+			return SimpleHTTPRequestHandler.do_GET(self)
+		elif re.match('/(?P<application>\w+)/player/', self.path):
+			if requested_mimetype == "application/json":
 				# return status as JSON string
 				match = re.match('/(?P<application>\w+)/player/', self.path)
 				application_name = match.groupdict()['application']
-				application_list = get_application_list()
-				application_bus  = application_list[application_name]['bus']
-				application      = mpris2.Application(application_bus)
+
+				application = self.get_application(application_name)
+
+				if application is None:
+					return
 
 				player_properties = [
 					"PlaybackStatus",
@@ -108,42 +110,51 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				output = {}
 				for p in player_properties:
 					output[p] = getattr(application.player, p)
+
+				if output.has_key("Metadata"):
+					if output['Metadata'].has_key("mpris:artUrl"):
+						import base64, urllib2, Image, StringIO
+						image_file = urllib2.urlopen(str(output['Metadata']['mpris:artUrl']))
+						image_string = StringIO.StringIO(image_file.read())
+						image_object = Image.open(image_string)
+						image_object.thumbnail((256, 256), Image.BILINEAR)
+						image_buffer = StringIO.StringIO()
+						image_object.save(image_buffer, format="JPEG")
+						b64_data = base64.b64encode(image_buffer.getvalue())
+						output['Metadata']['mpris:artUrl'] = "data:image/jpeg;base64,%s" % b64_data
+						image_file.close()
+
 				output = json.dumps(output)
-			elif re.match('/(?P<application>\w+)/', self.path):
+		elif re.match('/(?P<application>\w+)/', self.path):
+			print "application"
+			if requested_mimetype == "application/json":
 				matches = re.match('/(?P<application>\w+)/', self.path)
 				application_name = matches.groupdict()['application']
-				application_list = get_application_list()
 
-				try:
-					application_bus = application_list[application_name]['bus']
-				except KeyError:
-					self.send_response(404)
-					return
+				application = self.get_application(application_name)
 
-				application = mpris2.Application(application_bus)
+				if application is not None:
+					application_properties = [
+						"Identity",
+						"CanQuit",
+						"CanRaise",
+						"CanSetFullscreen",
+					]
 
-				application_properties = [
-					"Identity",
-					"CanQuit",
-					"CanRaise",
-					"CanSetFullscreen",
-				]
+					output = {}
+					for p in application_properties:
+						output[p] = getattr(application, p)
+					output = json.dumps(output)
 
-				output = {}
-				for p in application_properties:
-					output[p] = getattr(application, p)
-				output = json.dumps(output)
-
+		if output is not None:
 			self.send_response(200)
-			self.send_header('Content-type', requested_mimetype)
+			self.send_header('Content-Type', requested_mimetype)
 			self.end_headers()
 
 			# Send the html message
 			self.wfile.write(output.encode("UTF-8"))
-			self.wfile.write(u"\n")
+			self.wfile.write("\n")
 			return
-
-		return SimpleHTTPRequestHandler.do_GET(self)
 
 	def do_POST(self):
 		url = urlparse(self.path)
@@ -162,7 +173,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			post_data = {} # Unknown content-type
 
 		# Call a method on the player
-		m = re.match('/(?P<application>\w+)/player/(?P<action>\w+)$', self.path) 
+		m = re.match('/(?P<application>\w+)/player/(?P<action>\w+)$', self.path)
 		if m:
 			groups = m.groupdict()
 			application_name = groups['application']
@@ -229,16 +240,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
 	def get_application(self, application_name):
 		application_list = get_application_list()
 
-		try:
-			application_bus = application_list[application_name]['bus']
-			application = mpris2.Application(application_bus)
-		except KeyError, mpris2.PlayerNotRunning:
-			self.send_response(
-				404, message="No application \"%s\"" % application_name
-			)
-			return None
+		for app in application_list:
+			if app['name'] == application_name:
+				return mpris2.Application(app['bus'])
 
-		return application
+		self.send_response(
+			404, message="No application \"%s\"" % application_name
+		)
+		return None
 
 
 	def call_method(self, mpris_object, method, parameters={}):

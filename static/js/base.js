@@ -10,10 +10,11 @@ function setOrientation() {
 			$("body").addClass("landscape");
 			break;
 	}
-	window.setTimeout(function() {
-		window.scrollTo(0, 1);
-	},
-	1000
+	window.setTimeout(
+		function() {
+			window.scrollTo(0, 1);
+		},
+		1000
 	);
 }
 
