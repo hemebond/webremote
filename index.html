@@ -7,97 +7,213 @@
 		<meta name="viewport" content="user-scalable=false">
 
 		<script src="static/libs/jquery-1.9.1/jquery-1.9.1.min.js" type="text/javascript"></script>
-		<script src="static/libs/handlebars.js" type="text/javascript"></script>
-		<script src="static/libs/ember-1.0.0-rc.1.js" type="text/javascript"></script>
+		<script src="static/libs/can.jquery.min.js" type="text/javascript"></script>
 	</head>
 	<body>
-		<script type="text/x-handlebars" data-template-name="application">
-			<h1>Ember Committers</h1>
-			{{outlet}}
+		<ul id="applications"></ul>
+
+		<ul id='todos'></ul>
+		<input id='editor'/>
+
+		<script type="text/ejs" id="appEjs">
+			<% this.each(function(application) { %>
+				<li <%= (el) -> el.data('application', application) %>>
+					<span><%= application.attr('Identity') %></span>
+				</li>
+			<% }) %>
 		</script>
-		<script type="text/x-handlebars" data-template-name="contributors">
-			{{#each person in controller}}
-				{{person.login}}
-			{{/each}}
-		</script>
-		<script type="text/x-handlebars" data-template-name="mprisapplications">
-			{{#each application in controller}}
-				{{application.Identity}}
-			{{/each}}
+
+		<script type='text/ejs' id='todosEjs'>
+			<!-- bind to changes in the todo list -->
+			<% this.each(function( todo ) { %>
+				<!-- add the todo to the elements data -->
+				<li <%= (el) -> el.data('todo',todo) %>>
+
+					<input type="checkbox" class="complete"
+					<%= todo.attr('complete') ? 'checked' : '' %>>
+
+					<span class="<%= todo.attr('complete') ? 'done' : '' %>">
+						<%= todo.attr('name') %>
+					</span>
+
+					<!-- a destroy link -->
+					<a href="javascript://" class='destroy'>X</a>
+				</li>
+			<% }) %>
 		</script>
 
 		<script type="text/javascript">
-			window.App = Ember.Application.create();
-
-			App.MprisApplication = Ember.Object.extend({
-				url: null,
-				name: null,
-				Identity: null,
-				CanQuit: null,
-				CanRaise: null,
-				CanSetFullscreen: null,
-				player: null
-			});
-			App.MprisApplication.reopenClass({
-				allMprisApplications: [],
-				find: function() {
-					$.ajax({
-						url: '/',
-						dataType: 'json',
-						context: this,
-						success: function(response) {
-							response.forEach(function(application) {
-								this.allMprisApplications.addObject(App.MprisApplication.create(application))
-							}, this);
-						}
-					})
-					return this.allMprisApplications;
+			var Application = can.Model({
+				// findAll: function() {
+				// 	return $.Deferred().resolve(APPLICATIONS);
+				// },
+				findAll: '/',
+				// findOne: function(params) {
+				// 	return $.Deferred().resolve(APPLICATIONS[params.name]);
+				// },
+				findOne: '/{name}/',
+				// update: function(name, attrs) {
+				// 	$.extend(APPLICATIONS[name], attrs);
+				// 	return $.Deferred().resolve()
+				// },
+				update: 'POST /{name}/',
+				callMethod: function(data) {
+					console.log("callMethod:");
+					console.log(data);
 				}
+			},
+			{});
+
+			var Player = can.Model({
+				findOne: '/{name}/player/',/
 			})
 
-			App.Contributor = Ember.Object.extend();
-			App.Contributor.reopenClass({
-				allContributors: [],
-				find: function(){
-					$.ajax({
-						url: 'https://api.github.com/repos/emberjs/ember.js/contributors',
-						dataType: 'jsonp',
-						context: this,
-						success: function(response){
-							response.forEach(function(contributor){
-								this.allContributors.pushObject(App.Contributor.create(contributor))
-							}, this);
-						}
+			var Applications = can.Control({
+				"init": function(element, options) {
+					var el = this.element;
+					Application.findAll({}, function(applications) {
+						el.html(
+							can.view("appEjs", applications)
+						)
 					});
-					return this.allContributors;
+				},
+				"li click": function(li) {
+					li.trigger('selected', li.data('application'));
 				}
 			});
 
-			App.ApplicationView = Ember.View.extend({
-				templateName: 'application'
-			});
-			App.AllContributorsView = Ember.View.extend({
-				templateName: 'contributors'
-			});
-			App.AllMprisApplicationsView = Ember.View.extend({
-				templateName: 'mrpisapplications'
-			});
 
-			App.ApplicationController = Ember.Controller.extend();
-			App.AllContributorsController = Ember.ArrayController.extend();
-			App.AllMprisApplicationsController = Ember.ArrayController.extend();
+// Setup the model to work with dummy todos because we don't have a service
+// Only findAll and update are used.
+var TODOS = [
+    {id: 1, name: "wake up", complete: true},
+    {id: 2, name: "take out trash", complete: false},
+    {id: 3, name: "do dishes", complete: false}
+];
+var Todo = can.Model({
+    findAll : function(){
+      return $.Deferred().resolve(TODOS);
+    },
+    findOne : function(params){
+      return $.Deferred().resolve(TODOS[(+params.id)-1]);
+    },
+    update  : function(id, attrs){
+        // update TODOS with the new attrs
+        $.extend(TODOS[id -1], attrs);
+        return $.Deferred().resolve()
+    },
+    destroy : function(){
+        return $.Deferred().resolve()
+    }
+},
+{});
 
-			App.Router = Ember.Router.extend({
-				root: Ember.Route.extend({
-					index: Ember.Route.extend({
-						route: '/',
-						connectOutlets: function(router){
-							router.get('applicationController').connectOutlet('allMprisApplications', App.MprisApplication.find());
-						}
-					})
-				})
-			});
-			App.initialize();
-		</script>
+// Organizes a list of todos
+var Todos = can.Control({
+  // called when a new Todos() is created
+  "init" : function( element , options ){
+
+    // get all todos and render them with
+    // a template in the element's html
+    var el = this.element;
+    Todo.findAll({}, function(todos){
+      el.html( can.view('todosEjs', todos) )
+    });
+  },
+  // when a todo is clicked, create a 'selected'
+  // event for others to listen to
+  "li click" : function(li){
+    li.trigger('selected', li.data('todo') );
+  },
+  // when .complete is clicked, mark the todo completed
+  "li .complete click" : function(el, ev){
+    el.closest('li')
+      .data('todo')
+      .attr('complete', el.prop('checked'))
+      .save();
+
+    ev.stopPropagation();
+  },
+  // when .destroy is clicked, destroy the
+  // todo
+  "li .destroy click" : function(el, ev){
+    el.closest('li')
+      .data('todo')
+      .destroy();
+    ev.stopPropagation();
+  }
+});
+
+// Editor manages editing a todo's name
+// call update on the editor like
+var Editor = can.Control({
+  todo : function(todo){
+    this.options.todo = todo;
+    this.on();
+    this.setName()
+  },
+  // a helper that sets the value of the input
+  // to the todo's name
+  setName : function(){
+    this.element.val(this.options.todo.name);
+  },
+  // when the input changes
+  // update the todo instance
+  "change" : function(){
+    var todo = this.options.todo
+    todo.attr('name',this.element.val())
+    todo.save();
+  },
+  "{todo} destroyed" : function(){
+      this.element.hide();
+  }
+});
+
+// Routing puts all the widget controllers together
+// along with managing routes
+var Routing = can.Control({
+	init : function(){
+		this.editor = new Editor("#editor")
+		new Todos("#todos");
+		new Applications("#applications");
+	},
+		// the index page
+	"route" : function(){
+		$("#editor").hide();
+	},
+	"todos/:id route" : function(data){
+		$("#editor").show();
+		Todo.findOne(data, $.proxy(function(todo){
+		this.editor.todo(todo);
+		}, this))
+	},
+	"#todos li selected" : function(el, ev, todo){
+		can.route.attr('id',todo.id);
+	},
+	":name route": function(data) {
+		Application.findOne(data, $.proxy(function(application) {
+			console.log(data);
+			// load player
+		}, this))
+	},
+	":name/player route": function(data) {
+		console.log(":name/player route");
+	},
+	":name/:method route": function(data) {
+		console.log(":name/method route");
+		console.log(data);
+		// Application.findOne(data, )
+	},
+	"#applications li selected" : function(el, ev, application){
+		//can.route.attr('name', application.name);
+		// application.callMethod("Raise");
+		// var a = new Player();
+		console.log(application.player.url);
+	}
+});
+
+// create routing controller
+new Routing(document.body);
+</script>
 	</body>
 </html>
