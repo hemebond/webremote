@@ -6,11 +6,15 @@
 		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
 		<meta name="viewport" content="user-scalable=false">
 
+		<link rel="stylesheet" type="text/css" href="/static/themes/dark/theme.css">
+
 		<script src="static/libs/jquery-1.9.1/jquery-1.9.1.min.js" type="text/javascript"></script>
-		<script src="static/libs/can.jquery.min.js" type="text/javascript"></script>
+		<script src="static/libs/can.jquery.js" type="text/javascript"></script>
 	</head>
 	<body>
 		<ul id="applications"></ul>
+
+		<div id="player"></div>
 
 		<ul id='todos'></ul>
 		<input id='editor'/>
@@ -21,6 +25,66 @@
 					<span><%= application.attr('Identity') %></span>
 				</li>
 			<% }) %>
+		</script>
+
+		<script type="text/ejs" id="playerEjs">
+			<div id="art">
+				<img src="">
+			</div>
+
+			<% if ($.isEmptyObject(this['Metadata']) == false) { %>
+				<div id="track">
+					<dl>
+						<dt>Title</dt>
+						<dd id="track_title">
+							<% if (this.Metadata['xesam:title'] != undefined) { %>
+								<%= this.attr('Metadata.xesam:title') %>
+							<% } %>
+						</dd>
+						<dt>Artist</dt>
+						<dd id="track_artist">
+							<% if (this.attr('Metadata.xesam:artist') != undefined) { %>
+								<% this.attr('Metadata.xesam:artist').each(function(artist) {%>
+									<%= artist %>
+								<% }) %>
+							<% } %>
+						</dd>
+						<dt>Album</dt>
+						<dd id="track_album"></dd>
+					</dl>
+				</div>
+			<% } %>
+
+			<div id="controls">
+				<div id="options">
+					<div id="shuffle">
+						<span class="icon"></span>
+						<label for="shufflestatus">Shuffle</label>
+						<input id="shufflestatus" name="shuffle" type="checkbox" <%= this.attr('Shuffle') ? 'checked' : '' %>>
+					</div>
+
+					<div id="loop">
+						<span class="icon"></span>
+						<label for="loopstatus">Loop</label>
+						<select id="loopstatus" name="loopstatus">
+							<option value="None">None</option>
+							<option value="Playlist">Playlist</option>
+							<option value="Track">Track</option>
+						</select>
+					</div>
+				</div>
+				<div id="playback">
+					<button id="previous"><span class="ui-button-text">Previous</span></button>
+					<button id="play"><span class="ui-button-text">Play</span></button>
+					<button id="next"><span class="ui-button-text">Next</span></button>
+				</div>
+
+				<div id="progress-bar">
+					<div class="ui-slider">
+						<div class="ui-slider-range"></div>
+					</div>
+				</div>
+			</div>
 		</script>
 
 		<script type='text/ejs' id='todosEjs'>
@@ -56,17 +120,22 @@
 				// 	$.extend(APPLICATIONS[name], attrs);
 				// 	return $.Deferred().resolve()
 				// },
-				update: 'POST /{name}/',
+				update: 'POST /{name}/'
+			},{
 				callMethod: function(data) {
 					console.log("callMethod:");
 					console.log(data);
 				}
-			},
-			{});
+			});
 
-			var Player = can.Model({
-				findOne: '/{name}/player/',/
-			})
+			var currentPlayer = null;
+
+			var Player = can.Observe({
+				callMethod: function(data) {
+					console.log("Player callMethod");
+					console.log(data);
+				}
+			});
 
 			var Applications = can.Control({
 				"init": function(element, options) {
@@ -173,8 +242,8 @@ var Editor = can.Control({
 // along with managing routes
 var Routing = can.Control({
 	init : function(){
-		this.editor = new Editor("#editor")
-		new Todos("#todos");
+		// this.editor = new Editor("#editor")
+		// new Todos("#todos");
 		new Applications("#applications");
 	},
 		// the index page
@@ -208,7 +277,15 @@ var Routing = can.Control({
 		//can.route.attr('name', application.name);
 		// application.callMethod("Raise");
 		// var a = new Player();
-		console.log(application.player.url);
+		var appName = application.name;
+
+		$.getJSON(application.player.url, function(data) {
+			currentPlayer = new Player(data);
+
+			$('#player').html('').append(
+				can.view('playerEjs', currentPlayer)
+			);
+		});
 	}
 });
 

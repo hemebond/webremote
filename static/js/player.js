@@ -25,18 +25,6 @@ function objectToString(o){
 	return "{" + parse(o).join(", ") + "}";
 }
 
-
-
-function Player() {
-	this.properties = {};
-	this.url = "player/"
-
-	var self = this;
-	this.timer = window.setTimeout(function(){
-		self._update();
-	}, 1000);
-}
-
 /*
 	Based on https://github.com/NV/objectDiff.js/blob/gh-pages/objectDiff.js
 */
@@ -77,6 +65,18 @@ function simpleObjectDiff(a, b) {
 	return diff;
 }
 
+
+
+function Player() {
+	this.properties = {};
+	this.url = "player/";
+
+	var self = this;
+	this.timer = window.setTimeout(function(){
+		self._update();
+	}, 1000);
+}
+
 Player.prototype._update = function() {
 	var self = this;
 	$.ajax({
@@ -93,32 +93,31 @@ Player.prototype._update = function() {
 			}, 1000);
 		}
 	});
-
-}
+};
 
 Player.prototype._execute = function(action, argument) {
 	var data = {
 		action: action,
 		argument: argument
-	}
+	};
 	$.ajax({
 		type: 'POST',
 		url: this.url,
 		data: data
 	});
-}
+};
 
 Player.prototype.previous = function() {
 	this._execute("Previous");
-}
+};
 
 Player.prototype.playpause = function() {
 	this._execute("PlayPause");
-}
+};
 
 Player.prototype.next = function() {
 	this._execute("Next");
-}
+};
 
 Player.prototype.set_property = function(property, value) {
 	$.ajax({
@@ -127,20 +126,20 @@ Player.prototype.set_property = function(property, value) {
 		data: {new_value: value},
 		success: false
 	});
-}
+};
 
 Player.prototype.loopstatus = function(loop_status) {
 	this.set_property("LoopStatus", loop_status);
-}
+};
 
 Player.prototype.position = function(position) {
 	this.set_property("Position", position);
-}
+};
 
 Player.prototype.shuffle = function(shuffle) {
 	this.set_property("Shuffle", shuffle);
-}
+};
 
 Player.prototype.volume = function(volume) {
 	this.set_property("Volume", volume);
-}
+};

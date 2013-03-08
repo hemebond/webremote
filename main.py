@@ -78,10 +78,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				return SimpleHTTPRequestHandler.do_GET(self)
 		elif re.match('/static/', self.path):
 			return SimpleHTTPRequestHandler.do_GET(self)
-		elif re.match('/(?P<application>\w+)/player/', self.path):
+		elif re.match('/(?P<application>[^/]+)/player/', self.path):
 			if requested_mimetype == "application/json":
 				# return status as JSON string
-				match = re.match('/(?P<application>\w+)/player/', self.path)
+				match = re.match('/(?P<application>[^/]+)/player/', self.path)
 				application_name = match.groupdict()['application']
 
 				application = self.get_application(application_name)
@@ -125,10 +125,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						image_file.close()
 
 				output = json.dumps(output)
-		elif re.match('/(?P<application>\w+)/', self.path):
+		elif re.match('/(?P<application>[^/]+)/', self.path):
 			print "application"
 			if requested_mimetype == "application/json":
-				matches = re.match('/(?P<application>\w+)/', self.path)
+				matches = re.match('/(?P<application>[^/]+)/', self.path)
 				application_name = matches.groupdict()['application']
 
 				application = self.get_application(application_name)
