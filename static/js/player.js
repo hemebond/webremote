@@ -20,7 +20,7 @@ function objectToString(o){
 			}
 		}
 		return a;
-	}
+	};
 
 	return "{" + parse(o).join(", ") + "}";
 }
@@ -67,9 +67,10 @@ function simpleObjectDiff(a, b) {
 
 
 
-function Player() {
+function Player(url, element) {
+	this.element = element;
 	this.properties = {};
-	this.url = "player/";
+	this.url = url;
 
 	var self = this;
 	this.timer = window.setTimeout(function(){
@@ -79,27 +80,33 @@ function Player() {
 
 Player.prototype._update = function() {
 	var self = this;
-	$.ajax({
-		url: this.url,
-		dataType: "json",
-		success: function(data){
-			var diff = simpleObjectDiff(self.properties, data);
-			if (!$.isEmptyObject(diff)) {
-				$.extend(true, self.properties, diff);
-				$(document).trigger("PropertiesChanged", diff);
-			}
-			self.timer = window.setTimeout(function(){
-				self._update();
-			}, 1000);
+	$.getJSON(this.url, function(data) {
+		/*
+		var diff = simpleObjectDiff(self.properties, data);
+
+		if (!$.isEmptyObject(diff)) {
+			$.extend(true, self.properties, diff);
+			$(document).trigger("PropertiesChanged", diff);
 		}
+		*/
+		$.extend(true, self.properties, data);
+		$(document).trigger("PropertiesChanges", data);
+
+		self.timer = window.setTimeout(function(){
+			self._update();
+		}, 1000);
 	});
 };
 
-Player.prototype._execute = function(action, argument) {
-	var data = {
-		action: action,
-		argument: argument
-	};
+Player.prototype.callMethod = function(methodName, params) {
+	$.ajax({
+		type: 'POST',
+		url: this.url + methodName,
+		data: (params !== undefined) ? params : {}
+	});
+};
+
+Player.prototype.setProperty = function(data) {
 	$.ajax({
 		type: 'POST',
 		url: this.url,
@@ -107,39 +114,18 @@ Player.prototype._execute = function(action, argument) {
 	});
 };
 
-Player.prototype.previous = function() {
-	this._execute("Previous");
-};
-
-Player.prototype.playpause = function() {
-	this._execute("PlayPause");
-};
-
-Player.prototype.next = function() {
-	this._execute("Next");
-};
-
-Player.prototype.set_property = function(property, value) {
-	$.ajax({
-		type: 'POST',
-		url: this.url + property,
-		data: {new_value: value},
-		success: false
-	});
-};
-
 Player.prototype.loopstatus = function(loop_status) {
-	this.set_property("LoopStatus", loop_status);
+	this.setProperty({"LoopStatus": loop_status});
 };
 
 Player.prototype.position = function(position) {
-	this.set_property("Position", position);
+	this.setProperty({"Position": position});
 };
 
 Player.prototype.shuffle = function(shuffle) {
-	this.set_property("Shuffle", shuffle);
+	this.setProperty({"Shuffle": shuffle});
 };
 
 Player.prototype.volume = function(volume) {
-	this.set_property("Volume", volume);
+	this.setProperty({"Volume": volume});
 };

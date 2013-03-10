@@ -161,16 +161,23 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		query = parse_qsl(url.query)
 
 		# Parse the POST data into a dict
-		content_type, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-		length = int(self.headers.getheader('content-length'))
+		print "self.headers.getheader('content-type')"
+		print self.headers.getheader('content-type')
+		content_type_headers = self.headers.getheader('content-type')
 
-		if content_type == 'multipart/form-data':
-			post_data = cgi.parse_multipart(self.rfile, pdict)
-		elif content_type == 'application/x-www-form-urlencoded':
-			qs = self.rfile.read(length)
-			post_data = cgi.parse_qs(qs, keep_blank_values=1)
+		if content_type_headers is not None:
+			content_type, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+			length = int(self.headers.getheader('content-length'))
+
+			if content_type == 'multipart/form-data':
+				post_data = cgi.parse_multipart(self.rfile, pdict)
+			elif content_type == 'application/x-www-form-urlencoded':
+				qs = self.rfile.read(length)
+				post_data = cgi.parse_qs(qs, keep_blank_values=1)
+			else:
+				post_data = {} # Unknown content-type
 		else:
-			post_data = {} # Unknown content-type
+			post_data = {}
 
 		# Call a method on the player
 		m = re.match('/(?P<application>\w+)/player/(?P<action>\w+)$', self.path)

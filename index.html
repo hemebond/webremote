@@ -8,59 +8,39 @@
 
 		<link rel="stylesheet" type="text/css" href="/static/themes/dark/theme.css">
 
-		<script src="static/libs/jquery-1.9.1/jquery-1.9.1.min.js" type="text/javascript"></script>
-		<script src="static/libs/can.jquery.js" type="text/javascript"></script>
+		<script src="static/libs/jquery-1.9.1.js" type="text/javascript"></script>
+
+		<script type="text/javascript" src="/static/libs/obviel-1.0b5/src/obviel/obviel-template.js"></script>
+		<script type="text/javascript" src="/static/libs/obviel-1.0b5/src/obviel/obviel.js"></script>
 	</head>
 	<body>
-		<ul id="applications"></ul>
+		<ul id="app-list">
+		</ul>
 
-		<div id="player"></div>
-
-		<ul id='todos'></ul>
-		<input id='editor'/>
-
-		<script type="text/ejs" id="appEjs">
-			<% this.each(function(application) { %>
-				<li <%= (el) -> el.data('application', application) %>>
-					<span><%= application.attr('Identity') %></span>
-				</li>
-			<% }) %>
-		</script>
-
-		<script type="text/ejs" id="playerEjs">
+		<div id="player" style="display: none">
 			<div id="art">
 				<img src="">
 			</div>
 
-			<% if ($.isEmptyObject(this['Metadata']) == false) { %>
-				<div id="track">
-					<dl>
-						<dt>Title</dt>
-						<dd id="track_title">
-							<% if (this.Metadata['xesam:title'] != undefined) { %>
-								<%= this.attr('Metadata.xesam:title') %>
-							<% } %>
-						</dd>
-						<dt>Artist</dt>
-						<dd id="track_artist">
-							<% if (this.attr('Metadata.xesam:artist') != undefined) { %>
-								<% this.attr('Metadata.xesam:artist').each(function(artist) {%>
-									<%= artist %>
-								<% }) %>
-							<% } %>
-						</dd>
-						<dt>Album</dt>
-						<dd id="track_album"></dd>
-					</dl>
-				</div>
-			<% } %>
+			<div id="track">
+				<dl>
+					<dt>Title</dt>
+					<dd id="track-title"></dd>
+					<dt>Artist</dt>
+					<dd id="track-artist">
+						<ul></ul>
+					</dd>
+					<dt>Album</dt>
+					<dd id="track-album"></dd>
+				</dl>
+			</div>
 
 			<div id="controls">
 				<div id="options">
 					<div id="shuffle">
 						<span class="icon"></span>
 						<label for="shufflestatus">Shuffle</label>
-						<input id="shufflestatus" name="shuffle" type="checkbox" <%= this.attr('Shuffle') ? 'checked' : '' %>>
+						<input id="shufflestatus" name="shuffle" type="checkbox">
 					</div>
 
 					<div id="loop">
@@ -85,212 +65,6 @@
 					</div>
 				</div>
 			</div>
-		</script>
-
-		<script type='text/ejs' id='todosEjs'>
-			<!-- bind to changes in the todo list -->
-			<% this.each(function( todo ) { %>
-				<!-- add the todo to the elements data -->
-				<li <%= (el) -> el.data('todo',todo) %>>
-
-					<input type="checkbox" class="complete"
-					<%= todo.attr('complete') ? 'checked' : '' %>>
-
-					<span class="<%= todo.attr('complete') ? 'done' : '' %>">
-						<%= todo.attr('name') %>
-					</span>
-
-					<!-- a destroy link -->
-					<a href="javascript://" class='destroy'>X</a>
-				</li>
-			<% }) %>
-		</script>
-
-		<script type="text/javascript">
-			var Application = can.Model({
-				// findAll: function() {
-				// 	return $.Deferred().resolve(APPLICATIONS);
-				// },
-				findAll: '/',
-				// findOne: function(params) {
-				// 	return $.Deferred().resolve(APPLICATIONS[params.name]);
-				// },
-				findOne: '/{name}/',
-				// update: function(name, attrs) {
-				// 	$.extend(APPLICATIONS[name], attrs);
-				// 	return $.Deferred().resolve()
-				// },
-				update: 'POST /{name}/'
-			},{
-				callMethod: function(data) {
-					console.log("callMethod:");
-					console.log(data);
-				}
-			});
-
-			var currentPlayer = null;
-
-			var Player = can.Observe({
-				callMethod: function(data) {
-					console.log("Player callMethod");
-					console.log(data);
-				}
-			});
-
-			var Applications = can.Control({
-				"init": function(element, options) {
-					var el = this.element;
-					Application.findAll({}, function(applications) {
-						el.html(
-							can.view("appEjs", applications)
-						)
-					});
-				},
-				"li click": function(li) {
-					li.trigger('selected', li.data('application'));
-				}
-			});
-
-
-// Setup the model to work with dummy todos because we don't have a service
-// Only findAll and update are used.
-var TODOS = [
-    {id: 1, name: "wake up", complete: true},
-    {id: 2, name: "take out trash", complete: false},
-    {id: 3, name: "do dishes", complete: false}
-];
-var Todo = can.Model({
-    findAll : function(){
-      return $.Deferred().resolve(TODOS);
-    },
-    findOne : function(params){
-      return $.Deferred().resolve(TODOS[(+params.id)-1]);
-    },
-    update  : function(id, attrs){
-        // update TODOS with the new attrs
-        $.extend(TODOS[id -1], attrs);
-        return $.Deferred().resolve()
-    },
-    destroy : function(){
-        return $.Deferred().resolve()
-    }
-},
-{});
-
-// Organizes a list of todos
-var Todos = can.Control({
-  // called when a new Todos() is created
-  "init" : function( element , options ){
-
-    // get all todos and render them with
-    // a template in the element's html
-    var el = this.element;
-    Todo.findAll({}, function(todos){
-      el.html( can.view('todosEjs', todos) )
-    });
-  },
-  // when a todo is clicked, create a 'selected'
-  // event for others to listen to
-  "li click" : function(li){
-    li.trigger('selected', li.data('todo') );
-  },
-  // when .complete is clicked, mark the todo completed
-  "li .complete click" : function(el, ev){
-    el.closest('li')
-      .data('todo')
-      .attr('complete', el.prop('checked'))
-      .save();
-
-    ev.stopPropagation();
-  },
-  // when .destroy is clicked, destroy the
-  // todo
-  "li .destroy click" : function(el, ev){
-    el.closest('li')
-      .data('todo')
-      .destroy();
-    ev.stopPropagation();
-  }
-});
-
-// Editor manages editing a todo's name
-// call update on the editor like
-var Editor = can.Control({
-  todo : function(todo){
-    this.options.todo = todo;
-    this.on();
-    this.setName()
-  },
-  // a helper that sets the value of the input
-  // to the todo's name
-  setName : function(){
-    this.element.val(this.options.todo.name);
-  },
-  // when the input changes
-  // update the todo instance
-  "change" : function(){
-    var todo = this.options.todo
-    todo.attr('name',this.element.val())
-    todo.save();
-  },
-  "{todo} destroyed" : function(){
-      this.element.hide();
-  }
-});
-
-// Routing puts all the widget controllers together
-// along with managing routes
-var Routing = can.Control({
-	init : function(){
-		// this.editor = new Editor("#editor")
-		// new Todos("#todos");
-		new Applications("#applications");
-	},
-		// the index page
-	"route" : function(){
-		$("#editor").hide();
-	},
-	"todos/:id route" : function(data){
-		$("#editor").show();
-		Todo.findOne(data, $.proxy(function(todo){
-		this.editor.todo(todo);
-		}, this))
-	},
-	"#todos li selected" : function(el, ev, todo){
-		can.route.attr('id',todo.id);
-	},
-	":name route": function(data) {
-		Application.findOne(data, $.proxy(function(application) {
-			console.log(data);
-			// load player
-		}, this))
-	},
-	":name/player route": function(data) {
-		console.log(":name/player route");
-	},
-	":name/:method route": function(data) {
-		console.log(":name/method route");
-		console.log(data);
-		// Application.findOne(data, )
-	},
-	"#applications li selected" : function(el, ev, application){
-		//can.route.attr('name', application.name);
-		// application.callMethod("Raise");
-		// var a = new Player();
-		var appName = application.name;
-
-		$.getJSON(application.player.url, function(data) {
-			currentPlayer = new Player(data);
-
-			$('#player').html('').append(
-				can.view('playerEjs', currentPlayer)
-			);
-		});
-	}
-});
-
-// create routing controller
-new Routing(document.body);
-</script>
+		</div>
 	</body>
 </html>
