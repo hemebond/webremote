@@ -111,8 +111,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				for p in player_properties:
 					output[p] = getattr(application.player, p)
 
-				if output.has_key("Metadata"):
-					if output['Metadata'].has_key("mpris:artUrl"):
+				if 'Metadata' in output:
+					if 'mpris:artUrl' in output['Metadata']:
 						import base64, urllib2, Image, StringIO
 						image_file = urllib2.urlopen(str(output['Metadata']['mpris:artUrl']))
 						image_string = StringIO.StringIO(image_file.read())
@@ -123,6 +123,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						b64_data = base64.b64encode(image_buffer.getvalue())
 						output['Metadata']['mpris:artUrl'] = "data:image/jpeg;base64,%s" % b64_data
 						image_file.close()
+
+				if output['Metadata'] == {}:
+					output.removeAttr('Metadata')
 
 				output = json.dumps(output)
 		elif re.match('/(?P<application>[^/]+)/', self.path):

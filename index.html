@@ -14,10 +14,14 @@
 		<script type="text/javascript" src="/static/libs/obviel-1.0b5/src/obviel/obviel.js"></script>
 	</head>
 	<body>
+		<div id="foo"></div>
+
 		<ul id="app-list">
 		</ul>
 
-		<div id="player" style="display: none">
+		<div id="player"></div>
+
+		<script type="text/template" id="player-template">
 			<div id="art">
 				<img src="">
 			</div>
@@ -54,9 +58,15 @@
 					</div>
 				</div>
 				<div id="playback">
-					<button id="previous"><span class="ui-button-text">Previous</span></button>
-					<button id="play"><span class="ui-button-text">Play</span></button>
-					<button id="next"><span class="ui-button-text">Next</span></button>
+					<button id="previous">
+						<span class="ui-button-text">Previous</span>
+					</button>
+					<button id="play">
+						<span class="ui-button-text">Play</span>
+					</button>
+					<button id="next">
+						<span class="ui-button-text">Next</span>
+					</button>
 				</div>
 
 				<div id="progress-bar">
@@ -65,6 +75,59 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</script>
+
+		<script type='text/template' id="p">
+			{@.}
+			<ul>
+				<li data-repeat="persons">{name}</li>
+			</ul>
+		</script>
+
+		<script type="text/javascript">
+			obviel.view({
+				iface: 'player',
+				htmlScript: 'player-template'
+			});
+
+			obviel.view({
+				iface: 'app-list',
+				//obvt: '{@.}<ul><li data-repeat="persons">{name}</li></ul>'
+				htmlScript: 'p'
+				/*render: function() {
+					var appList = this;
+
+					$.each(this.obj.apps, function(index, data) {
+						var sub = $('<li/>').text(data.Identity);
+						appList.el.append(sub);
+					});
+				}*/
+			})
+
+			$(document).ready(function() {
+				$.getJSON('/', function(data) {
+					/*$('#app-list').render({
+						iface: 'app-list',
+						applications: data
+					});*/
+					$('body').render({
+						iface: 'app-list',
+						persons: [
+							{
+								name: "Bob"
+							},
+							{
+								name: "Steven"
+							}
+						]
+					});
+				});
+
+				$.getJSON('/rhythmbox/player/', function(data) {
+					data.iface = 'player';
+					$('#player').render(data);
+				});
+			});
+		</script>
 	</body>
 </html>
