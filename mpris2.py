@@ -107,8 +107,9 @@ class Player(object):
 		pass
 
 	def SetPosition(self, trackid, position):
-		# self.dbus_interface.SetPosition()
-		pass
+		print 'trackid: %s' % trackid
+		print 'position: %s' % position
+		self.dbus_interface.SetPosition(trackid, position)
 
 	def OpenUri(self, uri):
 		pass
@@ -139,7 +140,7 @@ class Player(object):
 
 	@Shuffle.setter
 	def Shuffle(self, value):
-		self.set_property("Shuffle", str2bool(value))
+		self.set_property("Shuffle", value)
 
 	@property
 	def Metadata(self):

@@ -23,7 +23,7 @@ $(document).ready(function() {
 		setOrientation();
 	});
 	setOrientation();
-
+/*
 	var applications = $.getJSON('/', function(data) {
 		var appList = $("#app-list");
 
@@ -47,6 +47,7 @@ $(document).ready(function() {
 			);
 		});
 	});
+*/
 });
 
-var player = null;
+//var player = null;

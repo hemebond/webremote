@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import socket
 import argparse
 import re, dbus, json, sys, mimeparse, mpris2
@@ -75,9 +76,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				# {"my_application": "My Application"}
 				output = json.dumps(get_application_list())
 			else:
-				return SimpleHTTPRequestHandler.do_GET(self)
+				#return SimpleHTTPRequestHandler.do_GET(self)
+				f = open('index.html')
+				output = f.read()
+
 		elif re.match('/static/', self.path):
 			return SimpleHTTPRequestHandler.do_GET(self)
+
 		elif re.match('/(?P<application>[^/]+)/player/', self.path):
 			if requested_mimetype == "application/json":
 				# return status as JSON string
@@ -125,11 +130,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						image_file.close()
 
 				if output['Metadata'] == {}:
-					output.removeAttr('Metadata')
+					del output['Metadata']
+
+				output['url'] = "/%s/player/" % application_name
 
 				output = json.dumps(output)
+
 		elif re.match('/(?P<application>[^/]+)/', self.path):
-			print "application"
 			if requested_mimetype == "application/json":
 				matches = re.match('/(?P<application>[^/]+)/', self.path)
 				application_name = matches.groupdict()['application']
@@ -147,11 +154,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					output = {}
 					for p in application_properties:
 						output[p] = getattr(application, p)
+
+					output['player'] = {
+						'url': '/%s/player/' % application_name
+					}
+
 					output = json.dumps(output)
 
 		if output is not None:
 			self.send_response(200)
 			self.send_header('Content-Type', requested_mimetype)
+			self.send_header('Cache-Control', "no-store")
 			self.end_headers()
 
 			# Send the html message
@@ -177,6 +190,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			elif content_type == 'application/x-www-form-urlencoded':
 				qs = self.rfile.read(length)
 				post_data = cgi.parse_qs(qs, keep_blank_values=1)
+			elif content_type == 'application/json':
+				qs = self.rfile.read(length)
+				post_data = json.loads(qs)
 			else:
 				post_data = {} # Unknown content-type
 		else:
@@ -195,6 +211,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			action = groups['action']
 
 			try:
+				print post_data
 				getattr(application.player, action)(**post_data)
 			except AttributeError:
 				self.send_response(
@@ -216,6 +233,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				return
 
 			for key, val in post_data.items():
+				print key, val
 				if hasattr(application.player, key):
 					if isinstance(val, list):
 						val = val[0]
