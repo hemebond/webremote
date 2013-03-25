@@ -122,7 +122,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						image_file = urllib2.urlopen(str(output['Metadata']['mpris:artUrl']))
 						image_string = StringIO.StringIO(image_file.read())
 						image_object = Image.open(image_string)
-						image_object.thumbnail((256, 256), Image.BILINEAR)
+						image_object.thumbnail((128, 128), Image.BILINEAR)
 						image_buffer = StringIO.StringIO()
 						image_object.save(image_buffer, format="JPEG")
 						b64_data = base64.b64encode(image_buffer.getvalue())
