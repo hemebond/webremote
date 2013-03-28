@@ -41,25 +41,27 @@
 		$scope.showPlayer = function(name) {
 			for (var i = 0; i < $scope.applications.length; i++) {
 				if ($scope.applications[i].name = name) {
-					player.update($scope.applications[i].player.url);
-					$('.frame').animate({
+					//player.update($scope.applications[i].player.url);
+					/*$('div.frame').animate({
 							left: '-=320'
-					}, 500);
+					}, 500);*/
+					$('.frame').toggleClass('change');
 				}
 			}
-
+/*
 			(function tick() {
 				player.update().then(function(){
 					player.poller = $timeout(tick, 1000);
 				});
-			})();
+			})();*/
 		}
 
 		$scope.showApplications = function() {
 			$timeout.cancel(player.poller);
-			$('.frame').animate({
+			/*$('div.frame').animate({
 					left: '+=320'
-			}, 500);
+			}, 500);*/
+			$('.frame').toggleClass('change');
 		}
 	};
 

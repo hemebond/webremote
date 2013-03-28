@@ -13,65 +13,67 @@
 		<link rel="stylesheet" type="text/css" href="/static/test.css">
 	</head>
 	<body ng-controller="MprisCtrl">
-		<div id="header"></div>
+		<div>
+			<div id="header"></div>
 
-		<div class="frame" id="list">
-			<div class="header">
-				<h1>{{application.Identity}}</h1>
-			</div>
-
-			<ul>
-				<li ng-repeat="application in applications" tap="showPlayer(application.name)">
-					{{application.Identity}}
-				</li>
-			</ul>
-		</div>
-
-		<div class="frame" id="player">
-			<div class="frame-head">
-				<button ng-click="showApplications()"><i></i> Applications</button>
-
-				<h1>{{application.Identity}}</h1>
-			</div>
-
-			<div class="frame-body">
-				<div id="art">
-					<img ng-src="{{player.get('Metadata.mpris:artUrl')}}">
+			<div class="frame" id="list">
+				<div class="header">
+					<h1>{{application.Identity}}</h1>
 				</div>
 
-				<div id="track">
-					<dl>
-						<dt>Title</dt>
-						<dd id="track-title">
-							{{player.get('Metadata.xesam:title')}}</dd>
-						<dt>Artist</dt>
-						<dd id="track-artist" ng-repeat="artist in player.get('Metadata.xesam:artist')">
-							{{artist}}
-						</dd>
-						<dt>Album</dt>
-						<dd id="track-album">
-							{{player.get('Metadata.xesam:album')}}
-						</dd>
-					</dl>
+				<ul>
+					<li ng-repeat="application in applications" tap="showPlayer(application.name)">
+						{{application.Identity}}
+					</li>
+				</ul>
+			</div>
+
+			<div class="frame" id="player">
+				<div class="frame-head">
+					<button tap="showApplications()"><i></i> Applications</button>
+
+					<h1>{{application.Identity}}</h1>
 				</div>
 
-				<div id="controls" >
-					<div id="options">
-						<a class="btn" ng-class="{'btn-success': player.get('Shuffle')}" ng-click="clickedShuffle()"><i class="icon-random"></i></a>
-						<a class="btn" ng-class="player.get('LoopStatus')" ng-click="clickedLoop()"><i class="icon-repeat"></i></a>
+				<div class="frame-body">
+					<div id="art">
+						<img ng-src="{{player.get('Metadata.mpris:artUrl')}}">
 					</div>
 
-					<div class="progress" ng-click="setPosition($event)">
-						<div class="bar" ng-style="{width: position()}">
+					<div id="track">
+						<dl>
+							<dt>Title</dt>
+							<dd id="track-title">
+								{{player.get('Metadata.xesam:title')}}</dd>
+							<dt>Artist</dt>
+							<dd id="track-artist" ng-repeat="artist in player.get('Metadata.xesam:artist')">
+								{{artist}}
+							</dd>
+							<dt>Album</dt>
+							<dd id="track-album">
+								{{player.get('Metadata.xesam:album')}}
+							</dd>
+						</dl>
+					</div>
+
+					<div id="controls" >
+						<div id="options">
+							<button class="btn" ng-class="{'btn-success': player.get('Shuffle')}" ng-click="clickedShuffle()"><i class="icon-random"></i>Shuffle</button>
+							<button class="btn" ng-class="player.get('LoopStatus')" ng-click="clickedLoop()"><i class="icon-repeat"></i>Loop</button>
 						</div>
-					</div>
 
-					<div class="btn-toolbar">
-						<div class="btn-group">
-							<button class="btn" ng-click="player.call('Previous')"><i class="icon-backward"></i><span>Previous</span></button>
-							<button class="btn" ng-click="player.call('Play')" ng-hide="player.isPlaying()"><i class="icon-play"></i><span>Play</span></button>
-							<button class="btn" ng-click="player.call('Pause')" ng-show="player.isPlaying()"><i class="icon-pause"></i><span>Pause</span></button>
-							<button class="btn" ng-click="player.call('Next')"><i class="icon-forward"></i><span>Next</span></button>
+						<div class="progress" ng-click="setPosition($event)">
+							<div class="bar" ng-style="{width: position()}">
+							</div>
+						</div>
+
+						<div class="btn-toolbar">
+							<div class="btn-group">
+								<button class="btn" ng-click="player.call('Previous')"><i class="icon-backward"></i><span>Previous</span></button>
+								<button class="btn" ng-click="player.call('Play')" ng-hide="player.isPlaying()"><i class="icon-play"></i><span>Play</span></button>
+								<button class="btn" ng-click="player.call('Pause')" ng-show="player.isPlaying()"><i class="icon-pause"></i><span>Pause</span></button>
+								<button class="btn" ng-click="player.call('Next')"><i class="icon-forward"></i><span>Next</span></button>
+							</div>
 						</div>
 					</div>
 				</div>
