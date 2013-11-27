@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
+# import os
 import socket
 import argparse
-import re, dbus, json, sys, mimeparse, mpris2
+import re, dbus, json, mimeparse, mpris2
 import cgi
-from urlparse import urlparse, parse_qsl
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+# from urlparse import urlparse, parse_qsl
+from BaseHTTPServer import HTTPServer  # BaseHTTPRequestHandler
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 
 
@@ -77,11 +77,26 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				output = json.dumps(get_application_list())
 			else:
 				#return SimpleHTTPRequestHandler.do_GET(self)
-				f = open('index.html')
+				f = open('static/newtest.html')
 				output = f.read()
+
+			# reset the response cache for this user
 
 		elif re.match('/static/', self.path):
 			return SimpleHTTPRequestHandler.do_GET(self)
+
+		elif re.match('/(?P<application>[^/]+)/playlists/', self.path):
+			if requested_mimetype == "application/json":
+				# return status as JSON string
+				match = re.match('/(?P<application>[^/]+)/playlists/', self.path)
+				application_name = match.groupdict()['application']
+
+				application = self.get_application(application_name)
+
+				if application is None:
+					return
+
+				output = json.dumps([])
 
 		elif re.match('/(?P<application>[^/]+)/player/', self.path):
 			if requested_mimetype == "application/json":
@@ -118,7 +133,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				if 'Metadata' in output:
 					if 'mpris:artUrl' in output['Metadata']:
-						import base64, urllib2, Image, StringIO
+						import base64
+						import urllib2
+						import Image
+						import StringIO
 						image_file = urllib2.urlopen(str(output['Metadata']['mpris:artUrl']))
 						image_string = StringIO.StringIO(image_file.read())
 						image_object = Image.open(image_string)
@@ -134,6 +152,21 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				output['url'] = "/%s/player/" % application_name
 
+				# make output a diff of the currently cached response
+				if self.client_address[0] in response_cache:
+					diff = {}
+
+					cache = response_cache[self.client_address[0]]
+
+					for key in output:
+						if key in cache:
+							if output[key] != cache[key]:
+								cache[key] = output[key]
+								diff[key] = output[key]
+					output = diff
+				else:
+					response_cache[self.client_address[0]] = output
+
 				output = json.dumps(output)
 
 		elif re.match('/(?P<application>[^/]+)/', self.path):
@@ -145,19 +178,29 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				if application is not None:
 					application_properties = [
-						"Identity",
 						"CanQuit",
-						"CanRaise",
+						"Fullscreen",
 						"CanSetFullscreen",
+						"CanRaise",
+						"HasTrackList",
+						"Identity",
+						"DesktopEntry",
+						"SupportedUriSchemes",
+						"SupportedMimeTypes"
 					]
 
 					output = {}
 					for p in application_properties:
-						output[p] = getattr(application, p)
+						try:
+							output[p] = getattr(application, p)
+						except dbus.exceptions.DBusException:
+							pass
 
-					output['player'] = {
-						'url': '/%s/player/' % application_name
-					}
+					# output['player'] = {
+					# 	'url': '/%s/player/' % application_name
+					# }
+
+					output['bus'] = application.path
 
 					output = json.dumps(output)
 
@@ -173,12 +216,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			return
 
 	def do_POST(self):
-		url = urlparse(self.path)
-		query = parse_qsl(url.query)
+		# url = urlparse(self.path)
+		# query = parse_qsl(url.query)
 
 		# Parse the POST data into a dict
-		print "self.headers.getheader('content-type')"
-		print self.headers.getheader('content-type')
 		content_type_headers = self.headers.getheader('content-type')
 
 		if content_type_headers is not None:
@@ -194,7 +235,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				qs = self.rfile.read(length)
 				post_data = json.loads(qs)
 			else:
-				post_data = {} # Unknown content-type
+				post_data = {}  # Unknown content-type
 		else:
 			post_data = {}
 
@@ -211,7 +252,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			action = groups['action']
 
 			try:
-				print post_data
 				getattr(application.player, action)(**post_data)
 			except AttributeError:
 				self.send_response(
@@ -233,14 +273,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				return
 
 			for key, val in post_data.items():
-				print key, val
 				if hasattr(application.player, key):
 					if isinstance(val, list):
 						val = val[0]
 
 					setattr(application.player, key, val)
-				else:
-					print "No attribute %s" % key
 
 			self.send_response(200)
 			return
@@ -262,6 +299,26 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			self.send_response(response_code, message=response_message)
 			return
 
+		# Set properties on the application
+		m = re.match('/(?P<application>\w+)/$', self.path)
+		if m:
+			# posting new properties to the application
+			application_name = m.groupdict()['application']
+			application = self.get_application(application_name)
+
+			if application is None:
+				return
+
+			for key, val in post_data.items():
+				if hasattr(application, key):
+					if isinstance(val, list):
+						val = val[0]
+
+					setattr(application, key, val)
+
+			self.send_response(200)
+			return
+
 		self.send_response(405) # Method Not Allowed
 		return
 
@@ -276,7 +333,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			404, message="No application \"%s\"" % application_name
 		)
 		return None
-
 
 	def call_method(self, mpris_object, method, parameters={}):
 		"""
@@ -295,9 +351,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		return 200, None
 
 
-
 class HTTPServerV6(HTTPServer):
 	address_family = socket.AF_INET6
+
+
+# A dict to store the last set of data sent to the client
+response_cache = {}
 
 
 def main():

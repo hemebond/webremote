@@ -187,8 +187,8 @@ ul > li a img { vertical-align:middle; margin-left:-4px; }
 	margin-left: -5px;
 }
 
-[class^="icon-"],
-[class*=" icon-"] {
+#controls [class^="icon-"],
+#controls [class*=" icon-"] {
 	display: inline-block;
 	width: 64px;
 	height: 64px;

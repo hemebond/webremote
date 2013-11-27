@@ -23,5 +23,5 @@ mprisApp.directive('tap', function() {
 				scope.$apply(attrs['tap']);
 			}
 		});
-	}
+	};
 });

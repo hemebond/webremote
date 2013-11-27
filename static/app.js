@@ -1,29 +1,22 @@
-/*function setOrientation() {
-	switch(window.orientation)
-	{
-		case 0:
-		case 180:
-			$("body").removeClass("landscape");
-			break;
-		case -90:
-		case 90:
-			$("body").addClass("landscape");
-			break;
-	}
-	window.setTimeout(
-		function() {
-			window.scrollTo(0, 1);
-		},
-		1000
-	);
-}
+var mprisApp = angular.module('mprisApp', ['ui.bootstrap']);
 
-$(document).ready(function() {
-	$("body").bind("orientationchange", function(){
-		setOrientation();
-	});
-	setOrientation();
+mprisApp.config(function($routeProvider, $locationProvider) {
+	$routeProvider.
+		when('/', {
+			templateUrl: 'applist.html'
+		}).
+		when('/:app/player/', {
+			templateUrl: 'player.html'
+		}).
+		when('/:app/playlists/', {
+			templateUrl: 'playlists.html'
+		}).
+		when('/:app/tracklist/', {
+			templateUrl: 'tracklist.html'
+		}).
+		when('/:app/settings/', {
+			templateUrl: 'settings.html'
+		});
+
+	$locationProvider.html5Mode(true);
 });
-*/
-
-var mprisApp = angular.module('mprisApp', []);

@@ -191,6 +191,40 @@ class Player(object):
 		return self.get_property("CanControl")
 
 
+class Playlists(object):
+	INTERFACE = "%s.Playlists" % mpris2_interface
+
+	def __init__(self, bus_object):
+		self.dbus_interface = dbus.Interface(bus_object, dbus_interface=self.INTERFACE)
+		self.dbus_properties = dbus.Interface(bus_object, dbus.PROPERTIES_IFACE)
+
+	def get_property(self, property_name):
+		value = self.dbus_properties.Get(self.INTERFACE, property_name)
+		return to_native_type(value)
+
+	def set_property(self, property_name, new_value):
+		self.dbus_properties.Set(self.INTERFACE, property_name, new_value)
+
+	def ActivatePlaylist(self, playlist_id):
+		self.dbus_interface.ActivePlaylist(playlist_id)
+
+	def GetPlaylists(self, index=0, max_count=255, order='Alphabetical', reverse=False):
+		playlists = self.dbus_interface.GetPlaylists(index, max_count, order, reverse)
+		return to_native_type(playlists)
+
+	@property
+	def PlaylistCount(self):
+		return self.get_property("PlaylistCount")
+
+	@property
+	def Orderings(self):
+		return self.get_property("Orderings")
+
+	@property
+	def ActivePlaylist(self):
+		return self.get_property("ActivePlaylist")
+
+
 class Application(object):
 	INTERFACE = mpris2_interface
 
@@ -206,13 +240,10 @@ class Application(object):
 		self.dbus_interface = dbus.Interface(bus_object, dbus_interface=self.INTERFACE)
 		self.dbus_properties = dbus.Interface(bus_object, dbus.PROPERTIES_IFACE)
 		self.player = Player(bus_object)
+		self.playlists = Playlists(bus_object)
 
 	def get_property(self, property_name):
-		try:
-			value = self.dbus_properties.Get(self.INTERFACE, property_name)
-		except dbus.DBusException:
-			return None
-
+		value = self.dbus_properties.Get(self.INTERFACE, property_name)
 		return to_native_type(value)
 
 	def set_property(self, property_name, new_value):
@@ -225,17 +256,41 @@ class Application(object):
 		self.dbus_interface.Quit()
 
 	@property
-	def Identity(self):
-		return self.get_property("Identity")
-
-	@property
 	def CanQuit(self):
 		return self.get_property("CanQuit")
+
+	@property
+	def Fullscreen(self):
+		return self.get_property("Fullscreen")
+
+	@Fullscreen.setter
+	def Fullscreen(self, value):
+		self.set_property("Fullscreen", value)
+
+	@property
+	def CanSetFullscreen(self):
+		return self.get_property("CanSetFullscreen")
 
 	@property
 	def CanRaise(self):
 		return self.get_property("CanRaise")
 
 	@property
-	def CanSetFullscreen(self):
-		return self.get_property("CanSetFullscreen")
+	def HasTrackList(self):
+		return self.get_property("HasTrackList")
+
+	@property
+	def Identity(self):
+		return self.get_property("Identity")
+
+	@property
+	def DesktopEntry(self):
+		return self.get_property("DesktopEntry")
+
+	@property
+	def SupportedUriSchemes(self):
+		return self.get_property("SupportedUriSchemes")
+
+	@property
+	def SupportedMimeTypes(self):
+		return self.get_property("SupportedMimeTypes")

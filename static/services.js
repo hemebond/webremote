@@ -1,4 +1,4 @@
-mprisApp.factory('pages', function($rootScope) {
+/*mprisApp.factory('pages', function($rootScope) {
 	var pages = {
 		stack: [
 			'apps'
@@ -23,34 +23,49 @@ mprisApp.factory('pages', function($rootScope) {
 	};
 
 	return pages;
-});
+});*/
 
-mprisApp.factory('application', function() {
-	var application = {};
-	return application
+mprisApp.factory('application', function($http, $timeout) {
+	var application = {
+		call: function(method, params) {
+			/*
+				method: "SetPosition"
+				params: "{TrackId: 1, Position: 0}"
+			*/
+			$http.post(
+				application.url + method,
+				(params !== undefined) ? params : {}
+			);
+		},
+
+		set: function(data) {
+			/*
+				data: {'Shuffle': true}
+			*/
+			$http.post(
+				application.url,
+				data
+			);
+		},
+
+		update: function(url) {
+			if (url !== undefined) {
+				application.url = url;
+			}
+
+			var promise = $http.get(application.url).then(function(response) {
+				angular.extend(application, response.data);
+			});
+
+			return promise;
+		}
+	};
+
+	return application;
 });
 
 mprisApp.factory('player', function($http, $timeout) {
 	var player = {
-/*		defaults: {
-			'CanControl': false,
-			'CanGoNext': false,
-			'CanGoPrevious': false,
-			'CanPause': false,
-			'CanPlay': false,
-			'CanSeek': false,
-			'LoopStatus': 'None',
-			'MaximumRate': 1,
-			'Metadata': null,
-			'MinimumRate': 1,
-			'PlaybackStatus': 'Stopped',
-			'Position': 0,
-			'Rate': 1,
-			'Shuffle': false,
-			'Volume': 1
-		},
-*/
-
 		call: function(method, params) {
 			/*
 				method: "SetPosition"
@@ -71,28 +86,13 @@ mprisApp.factory('player', function($http, $timeout) {
 				data
 			);
 
+			angular.forEach(data, function(value, key) {
+				player[key] = value;
+			});
 		},
 
-		// get: function(propertyString) {
-		// 	/*
-		// 		propertyString: player.get('Metadata.xesam:title');
-		// 	*/
-		// 	var obj = player.data;
-		// 	var parts = propertyString.split('.');
-		// 	while (parts.length) {
-		// 		var property = parts.shift();
-		// 		if (property in obj) {
-		// 			obj = obj[property];
-		// 		}
-		// 		else {
-		// 			return;
-		// 		}
-		// 	}
-		// 	return obj;
-		// },
-
 		update: function(url) {
-			if (url != undefined) {
+			if (url !== undefined) {
 				player.url = url;
 			}
 
@@ -104,7 +104,7 @@ mprisApp.factory('player', function($http, $timeout) {
 		},
 
 		isPlaying: function() {
-			return (player.PlaybackStatus == 'Playing') ? true : false;
+			return (player.PlaybackStatus == 'Playing');
 		}
 	};
 
