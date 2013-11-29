@@ -81,6 +81,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				output = f.read()
 
 			# reset the response cache for this user
+			if self.client_address[0] in response_cache:
+				response_cache[self.client_address[0]] = {}
 
 		elif re.match('/static/', self.path):
 			return SimpleHTTPRequestHandler.do_GET(self)
@@ -163,6 +165,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 							if output[key] != cache[key]:
 								cache[key] = output[key]
 								diff[key] = output[key]
+						else:
+							diff[key] = output[key]
 					output = diff
 				else:
 					response_cache[self.client_address[0]] = output

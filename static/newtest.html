@@ -65,15 +65,15 @@
 				<div class="body">
 					<div class="metadata">
 						<div class="art">
-							<img ng-show="player.Metadata['mpris:artUrl']"
-							     ng-src="{{player.Metadata['mpris:artUrl']}}">
-							<img ng-hide="player.Metadata['mpris:artUrl']"
+							<img ng-show="player.data.Metadata['mpris:artUrl']"
+							     ng-src="{{player.data.Metadata['mpris:artUrl']}}">
+							<img ng-hide="player.data.Metadata['mpris:artUrl']"
 							     src="/static/themes/dark/images/play.svg">
 						</div>
 
-						<div class="title">{{player.Metadata['xesam:title']}}</div>
+						<div class="title">{{player.data.Metadata['xesam:title']}}</div>
 						<div class="artist">
-							<span ng-repeat="artist in player.Metadata['xesam:artist']">
+							<span ng-repeat="artist in player.data.Metadata['xesam:artist']">
 								{{artist}}
 							</span>
 						</div>
@@ -81,32 +81,31 @@
 					</div>
 
 					<div class="progress">
-						<progress percent="dynamic"></progress>
-						<div class="bar" style="width: 50%"></div>
+						<div class="bar" ng-style="{ width: positionAsPercentage() + '%' }"></div>
 					</div>
 
 					<div class="btn-toolbar" id="controls">
 						<div class="btn-group">
 							<button class="btn"
-							        ng-show="player.CanGoPrevious"
+							        ng-show="player.data.CanGoPrevious"
 							        tap="buttonPrevious()">
 								<i class="icon-backward"></i>
 								<span>Previous</span>
 							</button>
 							<button class="btn"
 							        tap="buttonPlay()"
-							        ng-show="player.CanPlay && !player.isPlaying()">
+							        ng-show="player.data.CanPlay && !player.isPlaying()">
 								<i class="icon-play"></i>
 								<span>Play</span>
 							</button>
 							<button class="btn"
 							        tap="buttonPause()"
-							        ng-show="player.CanPause && player.isPlaying()">
+							        ng-show="player.data.CanPause && player.isPlaying()">
 								<i class="icon-pause"></i>
 								<span>Pause</span>
 							</button>
 							<button class="btn"
-							        ng-show="player.CanGoNext"
+							        ng-show="player.data.CanGoNext"
 							        tap="buttonNext()">
 								<i class="icon-forward"></i>
 								<span>Next</span>
@@ -125,6 +124,8 @@
 							<span>Playlists</span>
 						</button>
 					</div>
+
+					<pre>{{ player }}</pre>
 				</div>
 			</div>
 		</script>
@@ -143,7 +144,7 @@
 				<div class="body">
 					<button class="btn"
 					        tap="buttonShuffle()"
-					        ng-model="player.Shuffle"
+					        ng-model="player.data.Shuffle"
 					        btn-checkbox>
 						<i class="icon-random"></i>
 						Shuffle
@@ -153,20 +154,20 @@
 						<label>Repeat</label>
 						<div class="btn-group" data-toggle="buttons-radio">
 							<button class="btn"
-							        ng-model="player.LoopStatus"
+							        ng-model="player.data.LoopStatus"
 							        btn-radio="'None'"
 							        tap="buttonLoopStatus('None')">
 								No repeat
 							</button>
 							<button class="btn"
-							        ng-model="player.LoopStatus"
+							        ng-model="player.data.LoopStatus"
 							        btn-radio="'Track'"
 							        ng-hide="application.bus == 'org.mpris.MediaPlayer2.rhythmbox'"
 							        tap="buttonLoopStatus('Track')">
 								Repeat track
 							</button>
 							<button class="btn"
-							        ng-model="player.LoopStatus"
+							        ng-model="player.data.LoopStatus"
 							        btn-radio="'Playlist'"
 							        tap="buttonLoopStatus('Playlist')">
 								Repeat playlist

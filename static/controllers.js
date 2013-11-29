@@ -14,6 +14,7 @@ mprisApp.controller('AppListCtrl', function($scope, $http, $timeout, $location, 
 	};
 });
 
+
 mprisApp.controller('PlayerCtrl', function($scope, $rootScope, $routeParams, $timeout, $location, application, player) {
 	$scope.application = application;
 	$scope.player = player;
@@ -32,10 +33,12 @@ mprisApp.controller('PlayerCtrl', function($scope, $rootScope, $routeParams, $ti
 	};
 
 	$scope.buttonPlay = function() {
+		player.data.PlaybackStatus = 'Playing';
 		player.call('Play');
 	};
 
 	$scope.buttonPause = function() {
+		player.data.PlaybackStatus = 'Paused';
 		player.call('Pause');
 	};
 
@@ -50,7 +53,12 @@ mprisApp.controller('PlayerCtrl', function($scope, $rootScope, $routeParams, $ti
 	$scope.buttonPlaylists = function() {
 		$location.path('/' + $routeParams.app + '/playlists/');
 	};
+
+	$scope.positionAsPercentage = function() {
+		return player.data.Position * 100;
+	};
 });
+
 
 mprisApp.controller('SettingsCtrl', function($scope, $rootScope, $routeParams, $timeout, $location, application, player) {
 	$scope.application = application;
@@ -61,7 +69,7 @@ mprisApp.controller('SettingsCtrl', function($scope, $rootScope, $routeParams, $
 	};
 
 	$scope.buttonShuffle = function() {
-		player.set({'Shuffle': player.Shuffle});
+		player.set({'Shuffle': player.data.Shuffle});
 	};
 
 	$scope.buttonLoopStatus = function(loop) {
@@ -92,11 +100,13 @@ mprisApp.controller('SettingsCtrl', function($scope, $rootScope, $routeParams, $
 	};
 });
 
+
 mprisApp.controller('TracklistCtrl', function($scope, $location, $routeParams, player) {
 	$scope.buttonBack = function() {
 		$location.path('/' + $routeParams.app + '/player/');
 	};
 });
+
 
 mprisApp.controller('PlaylistsCtrl', function($scope, $http, $location, $routeParams, application) {
 	$http.get('/Playlists/').success(function(data) {

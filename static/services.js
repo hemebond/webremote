@@ -66,14 +66,14 @@ mprisApp.factory('application', function($http, $timeout) {
 
 mprisApp.factory('player', function($http, $timeout) {
 	var player = {
-		call: function(method, params) {
+		call: function(method, data) {
 			/*
 				method: "SetPosition"
 				params: "{TrackId: 1, Position: 0}"
 			*/
 			$http.post(
-				player.url + method,
-				(params !== undefined) ? params : {}
+				player.data.url + method,
+				(data !== undefined) ? data : {}
 			);
 		},
 
@@ -82,29 +82,32 @@ mprisApp.factory('player', function($http, $timeout) {
 				data: {'Shuffle': true}
 			*/
 			$http.post(
-				player.url,
+				player.data.url,
 				data
 			);
 
 			angular.forEach(data, function(value, key) {
-				player[key] = value;
+				player.data[key] = value;
 			});
 		},
 
 		update: function(url) {
 			if (url !== undefined) {
-				player.url = url;
+				player.data.url = url;
 			}
 
-			var promise = $http.get(player.url).then(function(response) {
-				angular.extend(player, response.data);
+			var promise = $http.get(player.data.url).then(function(response) {
+				angular.extend(player.data, response.data);
 			});
 
 			return promise;
 		},
 
 		isPlaying: function() {
-			return (player.PlaybackStatus == 'Playing');
+			return (player.data.PlaybackStatus == 'Playing');
+		},
+
+		data: {
 		}
 	};
 
