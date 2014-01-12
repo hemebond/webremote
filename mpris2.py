@@ -39,7 +39,7 @@ def to_native_type(data):
 	elif isinstance(data, (dbus.String, dbus.ObjectPath)):
 		return unicode(data)
 	elif isinstance(data, dbus.Signature):
-		return str(Signature(data))
+		return str(dbus.Signature(data))
 	else:
 		return int(data)
 
@@ -80,8 +80,9 @@ class Player(object):
 		if property_name == "Position":
 			metadata = self.get_property("Metadata")
 			if metadata.has_key("mpris:length"):
-				new_position = float(new_position) * float(metadata['mpris:length'])
-				self.dbus_interface.SetPosition(str(metadata['mpris:trackid']), new_position)
+				#new_position = float(new_position) * float(metadata['mpris:length'])
+				#self.dbus_interface.SetPosition(str(metadata['mpris:trackid']), new_position)
+				pass
 		else:
 			self.dbus_properties.Set(self.INTERFACE, property_name, new_value)
 

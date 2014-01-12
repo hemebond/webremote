@@ -1,23 +1,23 @@
 mprisApp.controller('AppListCtrl', function($scope, $http, $timeout, $location, application, player) {
+	$timeout.cancel(player.poller);
+
 	$http.get('/').success(function(data) {
 		$scope.applications = data;
 	});
-
-	$scope.handleAppClick = function(url) {
-		application.update(url);
-
-		(function tick() {
-			player.update(url + 'player/').then(function(){
-				player.poller = $timeout(tick, 1000);
-			});
-		})();
-	};
 });
 
 
 mprisApp.controller('PlayerCtrl', function($scope, $rootScope, $routeParams, $timeout, $location, application, player) {
 	$scope.application = application;
 	$scope.player = player;
+
+	application.update("/" + $routeParams['app'] + "/");
+
+	(function tick() {
+		player.update(application.url + 'player/').then(function(){
+			player.poller = $timeout(tick, 1000);
+		});
+	})();
 
 	$scope.buttonBack = function() {
 		$timeout.cancel(player.poller);
@@ -55,7 +55,48 @@ mprisApp.controller('PlayerCtrl', function($scope, $rootScope, $routeParams, $ti
 	};
 
 	$scope.positionAsPercentage = function() {
-		return player.data.Position * 100;
+		var pct = player.data.Position * 100;
+
+		if (pct > 100) {
+			return 0;
+		}
+
+		return pct;
+	};
+
+	$scope.positionAsText = function() {
+		if (player.data.Metadata !== undefined) {
+			var length = (player.data.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
+			var position = length * player.data.Position; // position in seconds
+
+			var minutes = Math.floor(position / 60.0);
+			var seconds = Math.floor(position % 60);
+
+			if (seconds < 10) {
+				seconds = "0" + seconds;
+			}
+
+			return minutes + ":" + seconds;
+		}
+
+		return "0:00";
+	};
+
+	$scope.trackLength = function() {
+		if (player.data.Metadata !== undefined) {
+			var length = player.data.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
+
+			var minutes = Math.floor(length / 60.0);
+			var seconds = length % 60;
+
+			if (seconds < 10) {
+				seconds = "0" + seconds;
+			}
+
+			return minutes + ":" + seconds;
+		}
+
+		return "0:0";
 	};
 });
 

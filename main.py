@@ -70,25 +70,27 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		)
 		output = None
 
-		if self.path == "/":
-			if requested_mimetype == "application/json":
-				# return the dict of applications as a JSON array
-				# {"my_application": "My Application"}
-				output = json.dumps(get_application_list())
-			else:
-				#return SimpleHTTPRequestHandler.do_GET(self)
-				f = open('static/newtest.html')
-				output = f.read()
 
-			# reset the response cache for this user
-			if self.client_address[0] in response_cache:
-				response_cache[self.client_address[0]] = {}
-
-		elif re.match('/static/', self.path):
+		#
+		# Static files
+		#
+		if re.match('/static/', self.path):
 			return SimpleHTTPRequestHandler.do_GET(self)
 
-		elif re.match('/(?P<application>[^/]+)/playlists/', self.path):
-			if requested_mimetype == "application/json":
+		elif requested_mimetype == "application/json":
+			#
+			# Root
+			#
+			if self.path == "/":
+				if requested_mimetype == "application/json":
+					# return the dict of applications as a JSON array
+					# {"my_application": "My Application"}
+					output = json.dumps(get_application_list())
+
+			#
+			# Playlists
+			#
+			elif re.match('/(?P<application>[^/]+)/playlists/', self.path):
 				# return status as JSON string
 				match = re.match('/(?P<application>[^/]+)/playlists/', self.path)
 				application_name = match.groupdict()['application']
@@ -100,8 +102,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				output = json.dumps([])
 
-		elif re.match('/(?P<application>[^/]+)/player/', self.path):
-			if requested_mimetype == "application/json":
+			#
+			# Player
+			#
+			elif re.match('/(?P<application>[^/]+)/player/', self.path):
 				# return status as JSON string
 				match = re.match('/(?P<application>[^/]+)/player/', self.path)
 				application_name = match.groupdict()['application']
@@ -173,8 +177,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				output = json.dumps(output)
 
-		elif re.match('/(?P<application>[^/]+)/', self.path):
-			if requested_mimetype == "application/json":
+			#
+			# Application
+			#
+			elif re.match('/(?P<application>[^/]+)/', self.path):
 				matches = re.match('/(?P<application>[^/]+)/', self.path)
 				application_name = matches.groupdict()['application']
 
@@ -200,13 +206,20 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						except dbus.exceptions.DBusException:
 							pass
 
-					# output['player'] = {
-					# 	'url': '/%s/player/' % application_name
-					# }
-
 					output['bus'] = application.path
 
 					output = json.dumps(output)
+		#
+		# Index
+		#
+		else:
+			#return SimpleHTTPRequestHandler.do_GET(self)
+			f = open('static/newtest.html')
+			output = f.read()
+
+			# reset the response cache for this user
+			if self.client_address[0] in response_cache:
+				response_cache[self.client_address[0]] = {}
 
 		if output is not None:
 			self.send_response(200)
@@ -217,7 +230,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			# Send the html message
 			self.wfile.write(output.encode("UTF-8"))
 			self.wfile.write("\n")
-			return
+
+		return
 
 	def do_POST(self):
 		# url = urlparse(self.path)
@@ -364,7 +378,9 @@ response_cache = {}
 
 
 def main():
-	parser = argparse.ArgumentParser(description="Provide a web interface to MPRIS2 media players.")
+	parser = argparse.ArgumentParser(
+		description="Provide a web interface to MPRIS2 media players."
+	)
 	parser.add_argument(
 		"-i", "--http-host",
 		default="0.0.0.0",

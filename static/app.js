@@ -1,4 +1,4 @@
-var mprisApp = angular.module('mprisApp', ['ui.bootstrap']);
+var mprisApp = angular.module('mprisApp', ['ngRoute', 'ngTouch', 'ui.bootstrap']);
 
 mprisApp.config(function($routeProvider, $locationProvider) {
 	$routeProvider.
