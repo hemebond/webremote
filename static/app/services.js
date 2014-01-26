@@ -1,30 +1,3 @@
-/*mprisApp.factory('pages', function($rootScope) {
-	var pages = {
-		stack: [
-			'apps'
-		],
-		openPage: function(pageName) {
-			var activePage = pages.stack.slice(-1)[0];
-
-			$('#' + activePage).removeClass('active').addClass('buried');
-			$('#' + pageName).addClass('active');
-
-			pages.stack.push(pageName);
-		},
-		closePage: function() {
-			if (pages.stack.length > 1) {
-				var activePage = pages.stack.pop();
-				$('#' + activePage).removeClass('active');
-
-				var nextPage = pages.stack.slice(-1)[0];
-				$('#' + nextPage).removeClass('buried').addClass('active');
-			}
-		}
-	};
-
-	return pages;
-});*/
-
 mprisApp.factory('application', function($http, $timeout) {
 	var application = {
 		call: function(method, params) {

@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
-# import os
+import os
 import socket
 import argparse
 import re, dbus, json, mimeparse, mpris2
-import cgi
-# from urlparse import urlparse, parse_qsl
-from BaseHTTPServer import HTTPServer  # BaseHTTPRequestHandler
-from SimpleHTTPServer import SimpleHTTPRequestHandler
+
+from http.server import HTTPServer  # BaseHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler
+
+from datetime import datetime, timedelta
+
+import imghdr
 
 
 class PlayerNotRunning(Exception):
@@ -70,12 +73,50 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		)
 		output = None
 
-
 		#
 		# Static files
 		#
 		if re.match('/static/', self.path):
-			return SimpleHTTPRequestHandler.do_GET(self)
+			return super(RequestHandler, self).do_GET()
+
+		elif re.match('/art/(?P<image>[\w\d]*)', self.path):
+			match = re.match('/art/(?P<image>[\w\d]*)', self.path)
+			filename = match.groupdict()['image']
+
+			home = os.path.expanduser("~")
+			art_dir = home + "/.cache/rhythmbox/album-art/"
+			file_path = art_dir + filename
+
+			try:
+				image_type = imghdr.what(file_path)
+				image_stat = os.stat(file_path)
+				image_size = image_stat.st_size
+				image_mtime = image_stat.st_mtime
+				last_modified = datetime.fromtimestamp(image_mtime).strftime("%a, %d %b %Y %H:%M:%S GMT")
+			except OSError:
+				self.send_error(404, "File not found")
+
+			if self.headers['If-Modified-Since'] and self.headers['If-Modified-Since'] == last_modified:
+				modified = False
+			else:
+				modified = True
+
+
+			if modified:
+				self.send_response(200)
+			else:
+				self.send_response(304)
+
+			self.send_header("Content-type", "image/" + image_type)
+			self.send_header("Content-length", image_size)
+			self.send_header("Last-Modified", last_modified)
+			self.end_headers()
+
+			if modified:
+				with open(file_path, 'rb') as f:
+					self.wfile.write(f.read())
+
+			return
 
 		elif requested_mimetype == "application/json":
 			#
@@ -139,19 +180,25 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				if 'Metadata' in output:
 					if 'mpris:artUrl' in output['Metadata']:
-						import base64
-						import urllib2
-						import Image
-						import StringIO
-						image_file = urllib2.urlopen(str(output['Metadata']['mpris:artUrl']))
-						image_string = StringIO.StringIO(image_file.read())
-						image_object = Image.open(image_string)
-						image_object.thumbnail((128, 128), Image.BILINEAR)
-						image_buffer = StringIO.StringIO()
-						image_object.save(image_buffer, format="JPEG")
-						b64_data = base64.b64encode(image_buffer.getvalue())
-						output['Metadata']['mpris:artUrl'] = "data:image/jpeg;base64,%s" % b64_data
-						image_file.close()
+						# import base64
+						# import imghdr
+						# from urllib.request import urlopen
+
+						# url = output['Metadata']['mpris:artUrl']
+
+						# # Read the image byte stream
+						# image = urlopen(url).read()
+
+						# # Base64 encode the byte stream and then convert to a UTF-8 string
+						# image_64 = base64.b64encode(image).decode("UTF-8")
+
+						# # Detect the type of image
+						# image_type = imghdr.what("", h=image)
+
+						# output['Metadata']['art'] = "data:image/%s;base64,%s" % (image_type, image_64)
+						name = output['Metadata']['mpris:artUrl'].split("/")[-1]
+						output['Metadata']['mpris:artUrl'] = "/art/%s" % name
+
 
 				if output['Metadata'] == {}:
 					del output['Metadata']
@@ -214,8 +261,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		#
 		else:
 			#return SimpleHTTPRequestHandler.do_GET(self)
-			f = open('static/newtest.html')
-			output = f.read()
+			with open('static/index.html') as f:
+				output = f.read()
 
 			# reset the response cache for this user
 			if self.client_address[0] in response_cache:
@@ -229,31 +276,18 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 			# Send the html message
 			self.wfile.write(output.encode("UTF-8"))
-			self.wfile.write("\n")
+			self.wfile.write(bytes("\n", 'UTF-8'))
 
 		return
 
 	def do_POST(self):
-		# url = urlparse(self.path)
-		# query = parse_qsl(url.query)
-
 		# Parse the POST data into a dict
-		content_type_headers = self.headers.getheader('content-type')
+		content_type = self.headers.get_content_type()
+		content_length = int(self.headers['Content-length'])
 
-		if content_type_headers is not None:
-			content_type, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-			length = int(self.headers.getheader('content-length'))
-
-			if content_type == 'multipart/form-data':
-				post_data = cgi.parse_multipart(self.rfile, pdict)
-			elif content_type == 'application/x-www-form-urlencoded':
-				qs = self.rfile.read(length)
-				post_data = cgi.parse_qs(qs, keep_blank_values=1)
-			elif content_type == 'application/json':
-				qs = self.rfile.read(length)
-				post_data = json.loads(qs)
-			else:
-				post_data = {}  # Unknown content-type
+		if content_type == 'application/json':
+			qs = self.rfile.read(content_length).decode('UTF-8')
+			post_data = json.loads(qs)
 		else:
 			post_data = {}
 
@@ -401,11 +435,11 @@ def main():
 		#Create a web server and define the handler to manage the
 		#incoming request
 		server = server_class((args.http_host, args.http_port), RequestHandler)
-		print('Listening on %s:%s' % (args.http_host, args.http_port))
+		print("Listening on %s:%s" % (args.http_host, args.http_port))
 		#Wait forever for incoming htto requests
 		server.serve_forever()
 	except KeyboardInterrupt:
-		print('Shutting down')
+		print("Shutting down")
 		server.socket.close()
 
 

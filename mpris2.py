@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
-import dbus, re, sys
-from utils import to_native_type
+import dbus, re
+#from utils import to_native_type
 
 mpris2_re = re.compile('^org\.mpris\.MediaPlayer2\.([^.]+)$')
 mpris2_object_path = "/org/mpris/MediaPlayer2"
@@ -37,9 +37,9 @@ def to_native_type(data):
 	elif isinstance(data, dbus.Boolean):
 		return bool(data)
 	elif isinstance(data, (dbus.String, dbus.ObjectPath)):
-		return unicode(data)
+		return "%s" % data
 	elif isinstance(data, dbus.Signature):
-		return str(dbus.Signature(data))
+		return "%s" % dbus.Signature(data)
 	else:
 		return int(data)
 
@@ -66,7 +66,7 @@ class Player(object):
 
 		if property_name == "Position":
 			metadata = self.get_property("Metadata")
-			if metadata.has_key("mpris:length"):
+			if 'mpris:length' in metadata:
 				if property_value != None:
 					property_value = float(property_value) / float(metadata['mpris:length'])
 				else:
@@ -108,8 +108,8 @@ class Player(object):
 		pass
 
 	def SetPosition(self, trackid, position):
-		print 'trackid: %s' % trackid
-		print 'position: %s' % position
+		print("trackid: %s" % trackid)
+		print("position: %s" % position)
 		self.dbus_interface.SetPosition(trackid, position)
 
 	def OpenUri(self, uri):

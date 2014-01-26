@@ -11,43 +11,24 @@
 		<script src="/static/libs/angularjs/1.2.3/angular-touch.min.js" type="text/javascript"></script>
 
 		<!-- AngularJS UI -->
-		<script src="/static/libs/angularjs-ui/0.7.0/ui-bootstrap-0.7.0.min.js" type="text/javascript"></script>
-		<script src="/static/libs/angularjs-ui/0.7.0/ui-bootstrap-tpls-0.7.0.min.js" type="text/javascript"></script>
+		<!--<script src="/static/libs/angularjs-ui/0.7.0/ui-bootstrap-0.7.0.min.js" type="text/javascript"></script>
+		<script src="/static/libs/angularjs-ui/0.7.0/ui-bootstrap-tpls-0.7.0.min.js" type="text/javascript"></script>-->
 
 		<!-- MPRIS application files -->
-		<script src="/static/app.js" type="text/javascript"></script>
-		<script src="/static/controllers.js" type="text/javascript"></script>
-		<script src="/static/services.js" type="text/javascript"></script>
-		<script src="/static/directives.js" type="text/javascript"></script>
+		<script src="/static/app/app.js" type="text/javascript"></script>
+		<script src="/static/app/controllers.js" type="text/javascript"></script>
+		<script src="/static/app/services.js" type="text/javascript"></script>
+		<script src="/static/app/directives.js" type="text/javascript"></script>
 
 		<!-- Stylesheets -->
 		<!--<link rel="stylesheet" href="/static/libs/bootstrap/2.3.2/css/bootstrap.min.css">-->
 		<link rel="stylesheet" href="/static/libs/font-awesome-4.0.3/css/font-awesome.min.css">
-		<link rel="stylesheet" href="/static/themes/coloured/theme.css">
+		<!--<link rel="stylesheet" href="/static/themes/coloured/theme.css">-->
 	</head>
 	<body>
 		<div id="viewport">
 			<div ng-view></div>
 		</div>
-
-		<script type="text/ng-template" id="applist.html">
-			<div id="apps" ng-controller="AppListCtrl">
-				<div class="head">
-					<h1>Applications</h1>
-				</div>
-
-				<div class="body">
-					<ul>
-						<li ng-repeat="app in applications">
-							<a href="/{{app.name}}/player/">
-								{{ app.Identity}}
-								<i class="fa fa-chevron-right pull-right"></i>
-							</a>
-						</li>
-					</ul>
-				</div>
-			</div>
-		</script>
 
 		<script type="text/ng-template" id="player.html">
 			<div id="player" ng-controller="PlayerCtrl">
@@ -67,39 +48,54 @@
 
 				<div class="body">
 					<div class="metadata">
-						<div class="art">
-							<img ng-show="player.data.Metadata['mpris:artUrl']"
+						<!--<div class="art">
+							<img ng-show="player.data.Metadata['art']"
+							     ng-src="{{player.data.Metadata['art']}}">
+							<img ng-hide="player.data.Metadata['art']"
+							     ng-show="player.data.Metadata['mpris:artUrl']"
 							     ng-src="{{player.data.Metadata['mpris:artUrl']}}">
 							<img ng-hide="player.data.Metadata['mpris:artUrl']"
 							     src="/static/themes/dark/images/play.svg">
-						</div>
-
-						<div class="title">
-							{{player.data.Metadata['xesam:title']}}
-						</div>
-
-						<div class="album">
-							{{ player.data.Metadata['xesam:album'] }}
-						</div>
+						</div>-->
 
 						<div class="artist">
 							<span ng-repeat="artist in player.data.Metadata['xesam:artist']">
 								{{artist}}
 							</span>
 						</div>
-					</div>
 
-					<div class="progress-info">
-						<div class="progress-text">{{ positionAsText() }}</div>
-						<div class="progress">
-							<div class="bar" ng-style="{ width: positionAsPercentage() + '%' }"></div>
+						<div class="album">
+							{{ player.data.Metadata['xesam:album'] }}
 						</div>
+
+						<div class="title">
+							{{player.data.Metadata['xesam:title']}}
+						</div>
+					</div>
+				</div>
+
+				<div class="footer">
+					<div class="progress-panel">
+						<div class="progress-text">
+							{{ positionAsText() }}
+						</div>
+
 						<div class="progress-length">
 							{{ trackLength() }}
+						</div>
+
+						<div class="progress">
+							<div class="bar" ng-style="{ width: positionAsPercentage() + '%' }"></div>
 						</div>
 					</div>
 
 					<div class="btn-toolbar" id="playcontrols">
+						<button class="btn btnTracklist"
+						        ng-click="buttonTracklist()">
+							<i class="fa fa-list"></i>
+							<span>Tracklist</span>
+						</button>
+
 						<div class="btn-group">
 							<button class="btn btnPrev"
 							        ng-show="player.data.CanGoPrevious"
@@ -127,17 +123,29 @@
 							</button>
 						</div>
 
-						<button class="btn btnTracklist"
-						        ng-click="buttonTracklist()">
-							<i class="fa fa-list"></i>
-							<span>Tracklist</span>
-						</button>
-
 						<button class="btn btnPlaylists"
 						        ng-click="buttonPlaylists()">
 							<i class="fa fa-list-alt"></i>
 							<span>Playlists</span>
 						</button>
+					</div>
+
+					<div class="volume-panel">
+						<button class="btn btnVolumeDown"
+						        ng-click="buttonVolumeDown()">
+							<i class="fa fa-volume-down"></i>
+							<span>Decrease</span>
+						</button>
+
+						<button class="btn btnVolumeUp"
+						        ng-click="buttonVolumeUp()">
+							<i class="fa fa-volume-up"></i>
+							<span>Increase</span>
+						</button>
+
+						<div class="volume">
+							<div class="bar" ng-style="{ width: (player.data['Volume'] * 100) + '%'}"></div>
+						</div>
 					</div>
 				</div>
 			</div>

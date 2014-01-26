@@ -96,7 +96,7 @@ mprisApp.controller('PlayerCtrl', function($scope, $rootScope, $routeParams, $ti
 			return minutes + ":" + seconds;
 		}
 
-		return "0:0";
+		return "0:00";
 	};
 });
 
