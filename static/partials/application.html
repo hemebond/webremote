@@ -18,26 +18,21 @@
 	<div class="body">
 		<div class="metadata">
 			<div class="art">
-				<img ng-show="dat.Metadata['art']"
-				     ng-src="{{ dat.Metadata['art'] }}">
-				<img ng-show="dat.Metadata['mpris:artUrl']"
-				     ng-src="{{ dat.Metadata['mpris:artUrl'] }}">
-				<img ng-hide="dat.Metadata['mpris:artUrl'] || dat.Metadata['art']"
-				     src="/static/themes/dark/images/play.svg">
+				<img ng-src="{{ artSrc }}"/>
 			</div>
 
 			<div class="artist">
-				<span ng-repeat="artist in dat.Metadata['xesam:artist']">
+				<span ng-repeat="artist in app.player.data.Metadata['xesam:artist']">
 					{{ artist }}
 				</span>
 			</div>
 
 			<div class="album">
-				{{ dat.Metadata['xesam:album'] }}
+				{{ app.player.data.Metadata['xesam:album'] }}
 			</div>
 
 			<div class="title">
-				{{ dat.Metadata['xesam:title'] }}
+				{{ app.player.data.Metadata['xesam:title'] }}
 			</div>
 		</div>
 	</div>
@@ -66,25 +61,25 @@
 
 			<div class="btn-group">
 				<button class="btn btnPrev"
-				        ng-show="dat.CanGoPrevious"
+				        ng-show="app.player.data.CanGoPrevious"
 				        ng-click="buttonPrevious()">
 					<i class="fa fa-fast-backward"></i>
 					<span>Previous</span>
 				</button>
 				<button class="btn btnPlay"
 				        ng-click="buttonPlay()"
-				        ng-show="dat.CanPlay && !plr.isPlaying()">
+				        ng-show="app.player.data.CanPlay && !app.player.isPlaying()">
 					<i class="fa fa-play"></i>
 					<span>Play</span>
 				</button>
 				<button class="btn btnPause"
 				        ng-click="buttonPause()"
-				        ng-show="dat.CanPause && plr.isPlaying()">
+				        ng-show="app.player.data.CanPause && app.player.isPlaying()">
 					<i class="fa fa-pause"></i>
 					<span>Pause</span>
 				</button>
 				<button class="btn btnNext"
-				        ng-show="dat.CanGoNext"
+				        ng-show="app.player.data.CanGoNext"
 				        ng-click="buttonNext()">
 					<i class="fa fa-fast-forward"></i>
 					<span>Next</span>

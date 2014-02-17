@@ -24,29 +24,38 @@ mprisControllers.controller('ApplicationCtrl', [
 		var volumePrecision = 1;
 
 		$scope.app = application;
-		$scope.plr = application.player;
-		$scope.dat = application.player.data;
 
 		$scope.application = application.setup($routeParams.application);
 
 		var player = application.player;
 
-		$scope.$watch('application.player.data.Volume', function() {
-			var volume = Number(application.player.data.Volume);
-
-			if (!isNaN(volume)) {
-				$scope.volume = volume.toPrecision(volumePrecision);
-			}
-			else {
-				$scope.volume = 0;
-			}
-		});
-
 		var tick = $interval(function() {
 			//application.player.update();
-			var promise = $http.get(application.getUrl("player")).then(function(response) {
-				angular.extend(application.player.data, response.data);
-			});
+			var promise = $http.get(application.getUrl("player")).then(
+				function(response) {
+					angular.extend(application.player.data, response.data);
+
+					if (application.player.data.Metadata) {
+						if (application.player.data.Metadata['mpris:artUrl']) {
+							$scope.artSrc = application.player.data.Metadata['mpris:artUrl'];
+						}
+						else {
+							$scope.artSrc = "/static/themes/dark/images/play.svg";
+						}
+					}
+
+
+					var volume = Number(application.player.data.Volume);
+					if (!isNaN(volume)) {
+						$scope.volume = volume.toPrecision(volumePrecision);
+					}
+					else {
+						$scope.volume = 0;
+					}
+				},
+				function(err) {
+					$location.path("/");
+				});
 		}, 1000);
 
 		$scope.$on("$destroy", function() {
@@ -114,11 +123,11 @@ mprisControllers.controller('ApplicationCtrl', [
 		};
 
 		$scope.buttonTracklist = function() {
-			console.log("Tracklist")
+			console.log("Tracklist");
 		};
 
 		$scope.buttonPlaylists = function() {
-			console.log("Playlists")
+			console.log("Playlists");
 		};
 
 		$scope.positionAsPercentage = function() {

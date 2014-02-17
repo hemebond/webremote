@@ -64,16 +64,23 @@ def get_player_root(handler, requested_mimetype):
 
 
 def test_url_patterns(url):
-	patterns = {
-		'static': r'/static/',
-		'art': r'/art/(?P<application>[\d\w]+)/(?P<image>[\w\d]+)',
-	}
+	patterns = [
+		(r'^/$', 'index'),
+		(r'^/static/', 'static'),
+		(r'^/art/(?P<application>[\w\d]+)/(?P<image>[\w\d]+)', 'art'),
+		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
+		(r'^/(?P<application>[\w\d]+)/player/', 'player'),
+		(r'^/(?P<application>[\w\d]+)/', 'application'),
+	]
 
-	for method_name, pattern in patterns.items():
-		url_match = re.match(pattern, url)
+	for pattern, pattern_name in patterns:
+		matches = re.match(pattern, url)
 
-		if url_match:
-			return (method_name, url_match)
+		if matches:
+			return (
+				pattern_name,
+				matches
+			)
 
 	return (None, None)
 
@@ -83,26 +90,34 @@ class RequestHandler(SimpleHTTPRequestHandler):
 	# Handler for the GET requests
 	def do_GET(self):
 		output = None
-
-		method_name, url_match = test_url_patterns(self.path)
-		accept_header = self.headers.get("accept")
-
 		requested_mimetype = None
+
+		match_name, matches = test_url_patterns(self.path)
+
+		if match_name is None:
+			self.send_error(404, "File not found")
+
+		accept_header = self.headers.get("accept")
 		if "application/json" in accept_header:
 			requested_mimetype = "application/json"
 
 		#
 		# Static files
 		#
-		if re.match('/static/', self.path):
+		if match_name == 'static':
 			return super(RequestHandler, self).do_GET()
 
-		elif re.match('/art/(?P<application>[\d\w]+)/(?P<image>[\w\d]+)', self.path):
-			match = re.match('/art/(?P<application>[\d\w]+)/(?P<image>[\w\d]+)', self.path)
-			filename = match.groupdict()['image']
+		elif match_name == 'art':
+			application_name = matches.groupdict()['application']
+			filename = matches.groupdict()['image']
 
 			home = os.path.expanduser("~")
-			art_dir = home + "/.cache/rhythmbox/album-art/"
+
+			art_directories = {
+				'rhythmbox': home + "/.cache/rhythmbox/album-art/",
+			}
+
+			art_dir = art_directories[application_name]
 			file_path = art_dir + filename
 
 			try:
@@ -125,34 +140,40 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			else:
 				self.send_response(304)
 
-			self.send_header("Content-type", "image/" + image_type)
+			if modified:
+				with open(file_path, 'rb') as f:
+					image_data = f.read()
+
+				if image_type is None:
+					if image_data.startswith(b'\xff\xd8'):
+							image_type = "jpeg"
+					else:
+						self.send_error(500, "Could not determine file type")
+
+				self.send_header("Content-type", "image/" + image_type)
+
 			self.send_header("Content-length", image_size)
 			self.send_header("Last-Modified", last_modified)
 			self.end_headers()
 
 			if modified:
-				with open(file_path, 'rb') as f:
-					self.wfile.write(f.read())
-
+				self.wfile.write(image_data)
 			return
 
 		elif requested_mimetype == "application/json":
 			#
 			# Root
 			#
-			if self.path == "/":
-				if requested_mimetype == "application/json":
-					# return the dict of applications as a JSON array
-					# {"my_application": "My Application"}
-					output = json.dumps(get_application_list())
-
+			if match_name == 'index':
+				# return the dict of applications as a JSON array
+				# {"my_application": "My Application"}
+				output = json.dumps(get_application_list())
 			#
 			# Playlists
 			#
-			elif re.match('/(?P<application>[^/]+)/playlists/', self.path):
+			elif match_name == 'playlists':
 				# return status as JSON string
-				match = re.match('/(?P<application>[^/]+)/playlists/', self.path)
-				application_name = match.groupdict()['application']
+				application_name = matches.groupdict()['application']
 
 				application = self.get_application(application_name)
 
@@ -164,10 +185,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			#
 			# Player
 			#
-			elif re.match('/(?P<application>[^/]+)/player/', self.path):
+			elif match_name == 'player':
 				# return status as JSON string
-				match = re.match('/(?P<application>[^/]+)/player/', self.path)
-				application_name = match.groupdict()['application']
+				application_name = matches.groupdict()['application']
 
 				application = self.get_application(application_name)
 
@@ -215,7 +235,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 						# output['Metadata']['art'] = "data:image/%s;base64,%s" % (image_type, image_64)
 						name = output['Metadata']['mpris:artUrl'].split("/")[-1]
-						output['Metadata']['mpris:artUrl'] = "/art/rhythmbox/%s" % name
+						output['Metadata']['mpris:artUrl'] = "/art/%s/%s" % (application_name, name)
 
 
 				if output['Metadata'] == {}:
@@ -245,8 +265,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			#
 			# Application
 			#
-			elif re.match('/(?P<application>[^/]+)/', self.path):
-				matches = re.match('/(?P<application>[^/]+)/', self.path)
+			elif match_name == 'application':
 				application_name = matches.groupdict()['application']
 
 				application = self.get_application(application_name)
@@ -278,6 +297,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		# Index
 		#
 		else:
+			requested_mimetype = "text/html"
 			#return SimpleHTTPRequestHandler.do_GET(self)
 			with open("index.html") as f:
 				output = f.read()
