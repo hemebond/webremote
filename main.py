@@ -18,12 +18,12 @@
 import os
 import socket
 import argparse
-import re, dbus, json, mimeparse, mpris2
+import re, dbus, json, mpris2
 
 from http.server import HTTPServer  # BaseHTTPRequestHandler
 from http.server import SimpleHTTPRequestHandler
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import imghdr
 
@@ -63,15 +63,33 @@ def get_player_root(handler, requested_mimetype):
 	pass
 
 
+def test_url_patterns(url):
+	patterns = {
+		'static': r'/static/',
+		'art': r'/art/(?P<application>[\d\w]+)/(?P<image>[\w\d]+)',
+	}
+
+	for method_name, pattern in patterns.items():
+		url_match = re.match(pattern, url)
+
+		if url_match:
+			return (method_name, url_match)
+
+	return (None, None)
+
+
 # This class will handles any incoming request from the browser
 class RequestHandler(SimpleHTTPRequestHandler):
 	# Handler for the GET requests
 	def do_GET(self):
-		requested_mimetype = mimeparse.best_match(
-			["text/html", "application/json"],
-			self.headers.get("accept")
-		)
 		output = None
+
+		method_name, url_match = test_url_patterns(self.path)
+		accept_header = self.headers.get("accept")
+
+		requested_mimetype = None
+		if "application/json" in accept_header:
+			requested_mimetype = "application/json"
 
 		#
 		# Static files
@@ -79,8 +97,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		if re.match('/static/', self.path):
 			return super(RequestHandler, self).do_GET()
 
-		elif re.match('/art/(?P<image>[\w\d]*)', self.path):
-			match = re.match('/art/(?P<image>[\w\d]*)', self.path)
+		elif re.match('/art/(?P<application>[\d\w]+)/(?P<image>[\w\d]+)', self.path):
+			match = re.match('/art/(?P<application>[\d\w]+)/(?P<image>[\w\d]+)', self.path)
 			filename = match.groupdict()['image']
 
 			home = os.path.expanduser("~")
@@ -197,7 +215,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 						# output['Metadata']['art'] = "data:image/%s;base64,%s" % (image_type, image_64)
 						name = output['Metadata']['mpris:artUrl'].split("/")[-1]
-						output['Metadata']['mpris:artUrl'] = "/art/%s" % name
+						output['Metadata']['mpris:artUrl'] = "/art/rhythmbox/%s" % name
 
 
 				if output['Metadata'] == {}:
@@ -261,7 +279,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		#
 		else:
 			#return SimpleHTTPRequestHandler.do_GET(self)
-			with open('static/index.html') as f:
+			with open("index.html") as f:
 				output = f.read()
 
 			# reset the response cache for this user

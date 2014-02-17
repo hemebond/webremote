@@ -1,4 +1,4 @@
-<div>
+<div class="page" ng-controller="ApplicationListCtrl">
 	<div class="head">
 		<h1>Applications</h1>
 	</div>
@@ -6,7 +6,7 @@
 	<div class="body">
 		<ul>
 			<li ng-repeat="app in applications">
-				<a href="/{{app.name}}/player/">
+				<a href="#/{{app.name}}/">
 					{{ app.Identity}}
 					<i class="fa fa-chevron-right pull-right"></i>
 				</a>

@@ -141,6 +141,12 @@ class Player(object):
 
 	@Shuffle.setter
 	def Shuffle(self, value):
+		try:
+			value = bool(value)
+		except ValueError:
+			print("New shuffle value not a bool")
+			return
+
 		self.set_property("Shuffle", value)
 
 	@property
@@ -153,7 +159,18 @@ class Player(object):
 
 	@Volume.setter
 	def Volume(self, value):
-		self.set_property("Volume")
+		try:
+			value = float(value)
+		except ValueError:
+			print("New volume value not a float")
+			return
+
+		if value < 0.0:
+			value = 0.0
+		elif value > 1.0:
+			value = 1.0
+
+		self.set_property("Volume", value)
 
 	@property
 	def Position(self):

@@ -1,0 +1,234 @@
+<div class="screen" id="player">
+	<div class="head">
+		<button class="btn btnBack"
+		        ng-click="buttonApplicationList()">
+			<i class="fa fa-chevron-left"></i>
+			<span>Applications</span>
+		</button>
+
+		<h1>{{ application.Identity }}</h1>
+
+		<button class="btn btnSettings pull-right"
+		        ng-click="buttonSettings()">
+			<i class="fa fa-cog"></i>
+			<span>Settings</span>
+		</button>
+	</div>
+
+	<div class="body">
+		<div class="metadata">
+			<div class="art">
+				<img ng-show="dat.Metadata['art']"
+				     ng-src="{{ dat.Metadata['art'] }}">
+				<img ng-show="dat.Metadata['mpris:artUrl']"
+				     ng-src="{{ dat.Metadata['mpris:artUrl'] }}">
+				<img ng-hide="dat.Metadata['mpris:artUrl'] || dat.Metadata['art']"
+				     src="/static/themes/dark/images/play.svg">
+			</div>
+
+			<div class="artist">
+				<span ng-repeat="artist in dat.Metadata['xesam:artist']">
+					{{ artist }}
+				</span>
+			</div>
+
+			<div class="album">
+				{{ dat.Metadata['xesam:album'] }}
+			</div>
+
+			<div class="title">
+				{{ dat.Metadata['xesam:title'] }}
+			</div>
+		</div>
+	</div>
+
+	<div class="footer">
+		<div class="progress-panel">
+			<div class="progress-text">
+				{{ positionAsText() }}
+			</div>
+
+			<div class="progress-length">
+				{{ trackLength() }}
+			</div>
+
+			<div class="progress">
+				<div class="bar" ng-style="{ width: positionAsPercentage() + '%' }"></div>
+			</div>
+		</div>
+
+		<div class="btn-toolbar" id="playcontrols">
+			<button class="btn btnTracklist"
+			        ng-click="buttonTracklist()">
+				<i class="fa fa-list"></i>
+				<span>Tracklist</span>
+			</button>
+
+			<div class="btn-group">
+				<button class="btn btnPrev"
+				        ng-show="dat.CanGoPrevious"
+				        ng-click="buttonPrevious()">
+					<i class="fa fa-fast-backward"></i>
+					<span>Previous</span>
+				</button>
+				<button class="btn btnPlay"
+				        ng-click="buttonPlay()"
+				        ng-show="dat.CanPlay && !plr.isPlaying()">
+					<i class="fa fa-play"></i>
+					<span>Play</span>
+				</button>
+				<button class="btn btnPause"
+				        ng-click="buttonPause()"
+				        ng-show="dat.CanPause && plr.isPlaying()">
+					<i class="fa fa-pause"></i>
+					<span>Pause</span>
+				</button>
+				<button class="btn btnNext"
+				        ng-show="dat.CanGoNext"
+				        ng-click="buttonNext()">
+					<i class="fa fa-fast-forward"></i>
+					<span>Next</span>
+				</button>
+			</div>
+
+			<button class="btn btnPlaylists"
+			        ng-click="buttonPlaylists()">
+				<i class="fa fa-list-alt"></i>
+				<span>Playlists</span>
+			</button>
+		</div>
+
+		<div class="volume-panel">
+			<button class="btn btnVolumeDown"
+			        ng-click="buttonVolumeDown()">
+				<i class="fa fa-volume-down"></i>
+				<span>Decrease</span>
+			</button>
+
+			<span>{{ volume }}</span>
+
+			<button class="btn btnVolumeUp"
+			        ng-click="buttonVolumeUp()">
+				<i class="fa fa-volume-up"></i>
+				<span>Increase</span>
+			</button>
+
+			<div class="volume">
+				<div class="bar" ng-style="{ width: (dat['Volume'] * 100) + '%'}"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="screen" id="settings">
+	<div class="head">
+		<button class="btn btnBack"
+		        ng-click="buttonBack()">
+			<i class="fa fa-chevron-left"></i>
+			<span>Player</span>
+		</button>
+		<h1>Settings</h1>
+	</div>
+
+	<div class="body">
+		<div class="control-group">
+			<label class="control-label" for="shuffleToggle">
+				Shuffle
+			</label>
+
+			<div class="controls">
+				<input type="checkbox"
+				       id="shuffleToggle"
+				       ng-model="dat.Shuffle"
+				       ng-change="buttonShuffle()">
+			</div>
+		</div>
+
+		<div>
+			<label>Repeat</label>
+			<div class="btn-group" data-toggle="buttons-radio">
+				<button class="btn"
+				        ng-model="dat.LoopStatus"
+				        btn-radio="'None'"
+				        ng-click="buttonLoopStatus('None')">
+					No repeat
+				</button>
+				<button class="btn"
+				        ng-model="dat.LoopStatus"
+				        btn-radio="'Track'"
+				        ng-hide="application.bus == 'org.mpris.MediaPlayer2.rhythmbox'"
+				        ng-click="buttonLoopStatus('Track')">
+					Repeat track
+				</button>
+				<button class="btn"
+				        ng-model="dat.LoopStatus"
+				        btn-radio="'Playlist'"
+				        ng-click="buttonLoopStatus('Playlist')">
+					Repeat playlist
+				</button>
+			</div>
+		</div>
+
+		<button class="btn"
+		        ng-show="application.CanSetFullscreen"
+		        ng-click="buttonFullscreen()"
+		        ng-model="application.Fullscreen"
+		        btn-checkbox>
+			<i class="fa fa-fullscreen"></i>
+			Fullscreen
+		</button>
+
+		<button class="btn"
+		        ng-show="application.CanRaise"
+		        ng-click="buttonRaise()">
+			<i class="fa fa-eye"></i>
+			Raise
+		</button>
+
+		<button class="btn"
+		        ng-show="application.CanQuit"
+		        ng-click="buttonQuit()">
+			<i class="fa fa-power-off"></i>
+			Quit
+		</button>
+		</form>
+	</div>
+</div>
+
+<div class="screen" id="playlists">
+	<div class="head">
+		<button class="btn btnBack"
+		        ng-click="buttonBack()">
+			<i class="fa fa-chevron-left"></i>
+			<span>Player</span>
+		</button>
+		<h1>Playlists</h1>
+	</div>
+
+	<div class="body">
+		<ul>
+			<li ng-repeat="playlist in playlists"
+			    ng-click="handleAppClick(playlist)">
+				<a>{{playlist}}</a>
+			</li>
+		</ul>
+	</div>
+</div>
+
+<div class="screen" id="tracklist">
+	<div class="head">
+		<button class="btn btnBack"
+		        ng-click="buttonBack()">
+			<i class="fa fa-chevron-left"></i>
+			<span>Player</span>
+		</button>
+		<h1>Tracklist</h1>
+	</div>
+
+	<div class="body">
+		<ul>
+			<li><a>Test</a></li>
+			<li><a>Test</a></li>
+		</ul>
+	</div>
+</div>
