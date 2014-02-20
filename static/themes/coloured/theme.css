@@ -1,0 +1,260 @@
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+button {
+	padding: 0;
+}
+/*
+.page {
+	width: 310px;
+	height: 352px;
+	border: 1px dashed red;
+	position: relative;
+}
+*/
+.head {
+	background-color: #5af;
+	position: relative;
+	/*padding: 16px;*/
+	/*height: 16px;*/
+}
+
+.head button {
+	display: block;
+	border: none;
+	font-size: 24px;
+	width: 32px;
+	height: 32px;
+	text-align: center;
+	padding: 0;
+}
+.head button span {
+	display: none;
+}
+
+.body {
+	position: absolute;
+	top: 48px;
+	width: 100%;
+}
+
+.footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+
+h1 {
+	font-size: 16px;
+	line-height: 32px;
+	font-weight: normal;
+	text-align: center;
+	margin: 0;
+	padding: 0;
+}
+
+.btnBack {
+	background-color: red;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+.btnBack span {
+	display: none;
+}
+
+.btnSettings {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.btnSettings span {
+	display: none;
+}
+
+
+.control-panel {
+    background-color: red;
+    text-align: center;
+}
+.control-panel button {
+    background-color: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: inline;
+    vertical-align: middle;
+    font-size: 32px;
+    width: 32px;
+}
+.control-panel button span {
+    display: none;
+}
+.control-panel .btn-group {
+    display: inline;
+    padding: 0 16px;
+}
+.control-panel .btn-group button {
+    font-size: 48px;
+    width: 64px;
+}
+.control-panel .btn-group .btnPause,
+.control-panel .btn-group .btnPlay {
+    font-size: 64px;
+    width: 64px;
+}
+
+
+
+/*
+#apps ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+#apps li {
+	border-bottom: 1px solid #579;
+}
+#apps ul a {
+	color: #eee;
+	text-decoration: none;
+	display: block;
+	padding: 16px 8px;
+}
+
+#playcontrols {
+	position: relative;
+	background-color: #FF6E00;
+	text-align: center;
+	color: white;
+	margin: 0;
+	padding: 8px 0;
+	height: 32px;
+}
+#playcontrols button {
+	border: none;
+	background: none;
+	color: white;
+	vertical-align: middle;
+	line-height: 32px;
+	font-size: 24px;
+	width: 32px;
+}
+#playcontrols button span {
+	display: none;
+}
+
+.btnPlay,
+.btnPause {
+	font-size: 32px !important;
+	vertical-align: middle;
+	margin: 0 16px;
+}
+.btnPrev,
+.btnNext {
+	font-size: 24px !important;
+	width: 32px;
+	line-height: 32px;
+	vertical-align: middle;
+}
+
+*/
+.metadata {
+	text-align: center;
+}
+
+.art {
+	margin-bottom: 4px;
+}
+.art img {
+	max-height: 120px;
+}
+.artist {
+	margin: 12px 0;
+}
+.album {
+	margin: 12px 0;
+}
+.title {
+	font-weight: bold;
+	margin: 12px 0;
+	font-size: 1.5em;
+}
+
+
+
+.progress-panel {
+    position: relative;
+	background-color: gray;
+	height: 24px;
+    padding: 8px 8px 0;
+}
+
+.progress {
+	background-color: white;
+	height: 16px;
+	margin: 0 48px;
+}
+.progress .bar {
+	background-color: black;
+	height: 16px;
+}
+.progress-length {
+	float: right;
+}
+.progress-text {
+	float: left;
+}
+
+
+
+.volume-panel {
+	text-align: center;
+    background-color: gray;
+    height: 32px;
+    position: relative;
+}
+.volume-panel button {
+    border: none;
+	color: white;
+    height: 32px;
+	width: 32px;
+    font-size: 24px;
+    padding: 0;
+    margin: 0;
+}
+.volume-panel button span {
+	display: none;
+}
+
+.btnVolumeDown {
+	position: absolute;
+    left: 0;
+    top: 0;
+}
+.btnVolumeUp {
+	position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.volume {
+    position: absolute;
+    top: 8px;
+    left: 48px;
+    right: 48px;
+	height: 16px;
+	background-color: white;
+}
+
+.volume .bar {
+	background-color: black;
+	height: 16px;
+}
+
+
+#settings, #tracklist, #playlists {
+	display: none;
+}

@@ -70,7 +70,7 @@ def test_url_patterns(url):
 		(r'^/art/(?P<application>[\w\d]+)/(?P<image>[\w\d]+)', 'art'),
 		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
 		(r'^/(?P<application>[\w\d]+)/player/', 'player'),
-		(r'^/(?P<application>[\w\d]+)/', 'application'),
+		(r'^/(?P<application>[\w\d]+)/(\?.+)?', 'application'),
 	]
 
 	for pattern, pattern_name in patterns:
@@ -301,6 +301,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			#return SimpleHTTPRequestHandler.do_GET(self)
 			with open("index.html") as f:
 				output = f.read()
+
+			initial_app_list = json.dumps(get_application_list())
+			output = output.replace("initialAppList=[]", "initialAppList=%s" % initial_app_list)
 
 			# reset the response cache for this user
 			if self.client_address[0] in response_cache:

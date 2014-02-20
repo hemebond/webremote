@@ -5,7 +5,7 @@ var mprisControllers = angular.module('mprisControllers', []);
 
 mprisControllers.controller('ApplicationListCtrl', ['$scope', '$http', '$timeout', 'application',
 	function($scope, $http, $timeout, application) {
-		$http.get('/').success(function(data) {
+		$http.get("/").success(function(data) {
 			$scope.applications = data;
 		});
 	}]);
@@ -16,51 +16,54 @@ mprisControllers.controller('ApplicationCtrl', [
 	'$http',
 	'$routeParams',
 	'$interval',
+	'$timeout',
 	'$location',
 	'application',
-	function($scope, $http, $routeParams, $interval, $location, application) {
+	function($scope, $http, $routeParams, $interval, $timeout, $location, application) {
 		var activeScreen = "player";
 		var volumeIncrementSize = 0.1;
 		var volumePrecision = 1;
+		var pollInterval = 1000; // milliseconds
+		var poller = null;
 
 		$scope.app = application;
 
-		$scope.application = application.setup($routeParams.application);
+		if (!application.hasOwnProperty("_bus") || application._bus === null) {
+			application._url = "/" + $routeParams.application + "/";
 
-		var player = application.player;
+			application._update().then(
+				function() {
+					function tick() {
+						application.player._update().then(
+							function() {
+							},
+							function() {
+								$location.path("/");
+							}
+						);
 
-		var tick = $interval(function() {
-			//application.player.update();
-			var promise = $http.get(application.getUrl("player")).then(
-				function(response) {
-					angular.extend(application.player.data, response.data);
-
-					if (application.player.data.Metadata) {
-						if (application.player.data.Metadata['mpris:artUrl']) {
-							$scope.artSrc = application.player.data.Metadata['mpris:artUrl'];
+						var volume = Number(application.player.Volume);
+						if (!isNaN(volume)) {
+							$scope.volume = volume.toPrecision(volumePrecision);
 						}
 						else {
-							$scope.artSrc = "/static/themes/dark/images/play.svg";
+							$scope.volume = 0;
 						}
-					}
 
+						poller = $timeout(tick, pollInterval);
+					};
 
-					var volume = Number(application.player.data.Volume);
-					if (!isNaN(volume)) {
-						$scope.volume = volume.toPrecision(volumePrecision);
-					}
-					else {
-						$scope.volume = 0;
-					}
+					$timeout(tick, pollInterval);
 				},
-				function(err) {
+				function() {
 					$location.path("/");
-				});
-		}, 1000);
+				}
+			);
+		}
 
 		$scope.$on("$destroy", function() {
-			$interval.cancel(tick);
-			application.data = {};
+			$timeout.cancel(poller);
+			application._reset();
 		});
 
 		$scope.buttonApplicationList = function() {
@@ -70,56 +73,47 @@ mprisControllers.controller('ApplicationCtrl', [
 
 		$scope.buttonSettings = function() {
 			console.log("Show settings");
+			$timeout.cancel(poller);
 		};
 
 		$scope.buttonPrevious = function() {
-			player.call('Previous');
+			application.player.Previous();
 		};
 
 		$scope.buttonPlay = function() {
-			player.data.PlaybackStatus = 'Playing';
-			player.call('Play');
+			application.player.PlayPause()
 		};
 
 		$scope.buttonPause = function() {
-			player.data.PlaybackStatus = 'Paused';
-			player.call('Pause');
+			application.player.Pause()
 		};
 
 		$scope.buttonNext = function() {
-			player.call('Next');
+			application.player.Next();
 		};
 
-		$scope.buttonVolumeUp = function() {
-			var newVolume = parseFloat(parseFloat(player.data.Volume).toPrecision(volumePrecision));
-
-			if (newVolume >= 1.0) {
-				return;
-			}
-
-			newVolume += volumeIncrementSize;
-
-			if (newVolume > 1.0) {
-				newVolume = 1.0;
-			}
-
-			player.set({'Volume': newVolume});
-		};
-
-		$scope.buttonVolumeDown = function() {
-			var newVolume = parseFloat(parseFloat(player.data.Volume).toPrecision(volumePrecision));
-
-			if (newVolume <= 0.0) {
-				return;
-			}
-
-			newVolume -= volumeIncrementSize;
+		function adjustVolume(change) {
+			var p = application.player;
+			var currentVolume = parseFloat(parseFloat(p.Volume).toPrecision(volumePrecision));
+			var newVolume = (currentVolume + change).toPrecision(volumePrecision);
 
 			if (newVolume < 0.0) {
 				newVolume = 0.0;
 			}
+			else if (newVolume > 1.0) {
+				newVolume = 1.0;
+			}
 
-			player.set({'Volume': newVolume});
+			$scope.volume = newVolume;
+			p._set({"Volume": newVolume});
+		}
+
+		$scope.buttonVolumeUp = function() {
+			adjustVolume(+volumeIncrementSize);
+		};
+
+		$scope.buttonVolumeDown = function() {
+			adjustVolume(-volumeIncrementSize);
 		};
 
 		$scope.buttonTracklist = function() {
@@ -131,7 +125,7 @@ mprisControllers.controller('ApplicationCtrl', [
 		};
 
 		$scope.positionAsPercentage = function() {
-			var pct = player.data.Position * 100;
+			var pct = application.player.Position * 100;
 
 			if (pct > 100) {
 				return 0;
@@ -141,9 +135,11 @@ mprisControllers.controller('ApplicationCtrl', [
 		};
 
 		$scope.positionAsText = function() {
-			if (player.data.Metadata !== undefined) {
-				var length = (player.data.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
-				var position = length * player.data.Position; // position in seconds
+			var p = application.player;
+
+			if (p.Metadata !== undefined) {
+				var length = (p.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
+				var position = length * p.Position; // position in seconds
 
 				var minutes = Math.floor(position / 60.0);
 				var seconds = Math.floor(position % 60);
@@ -159,8 +155,10 @@ mprisControllers.controller('ApplicationCtrl', [
 		};
 
 		$scope.trackLength = function() {
-			if (player.data.Metadata !== undefined) {
-				var length = player.data.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
+			var p = application.player;
+
+			if (p.Metadata !== undefined) {
+				var length = p.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
 
 				var minutes = Math.floor(length / 60.0);
 				var seconds = length % 60;
@@ -176,33 +174,23 @@ mprisControllers.controller('ApplicationCtrl', [
 		};
 
 		$scope.buttonShuffle = function() {
-			player.set({'Shuffle': player.data.Shuffle});
+			application.player._set({'Shuffle': application.player.Shuffle});
 		};
 
 		$scope.buttonLoopStatus = function(loop) {
-	/*
-			var loop = player.LoopStatus;
-
-			if (application.bus == 'org.mpris.MediaPlayer2.rhythmbox') {
-				loop = (loop == 'None') ? 'Playlist' : 'None';
-			}
-			else {
-				loop = (loop == 'None') ? 'Track' : (loop == 'Track') ? 'Playlist' : 'None';
-			}
-	*/
-			player.set({'LoopStatus': loop});
+			application.player._set({'LoopStatus': loop});
 		};
 
 		$scope.buttonFullscreen = function() {
-			application.set({'Fullscreen': application.Fullscreen});
+			application._set({'Fullscreen': application.Fullscreen});
 		};
 
 		$scope.buttonRaise = function() {
-			application.call('Raise');
+			application._call('Raise');
 		};
 
 		$scope.buttonQuit = function() {
-			application.call('Quit');
+			application._call('Quit');
 			$location.path('/');
 		};
 	}]);
