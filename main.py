@@ -85,6 +85,12 @@ def test_url_patterns(url):
 	return (None, None)
 
 
+def do_art(request, application, image):
+	print(application)
+	print(image)
+	return
+
+
 # This class will handles any incoming request from the browser
 class RequestHandler(SimpleHTTPRequestHandler):
 	# Handler for the GET requests
@@ -108,6 +114,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			return super(RequestHandler, self).do_GET()
 
 		elif match_name == 'art':
+			do_art(self, **matches.groupdict())
+			return
 			application_name = matches.groupdict()['application']
 			filename = matches.groupdict()['image']
 

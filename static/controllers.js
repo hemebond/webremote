@@ -53,6 +53,7 @@ mprisControllers.controller('ApplicationCtrl', [
 					$timeout(tick, pollInterval);
 				},
 				function() {
+					$timeout.cancel(poller);
 					$location.path("/");
 				}
 			);
