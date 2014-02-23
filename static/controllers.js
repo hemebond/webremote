@@ -34,13 +34,10 @@ mprisControllers.controller('ApplicationCtrl', [
 			application._update().then(
 				function() {
 					function tick() {
-						application.player._update().then(
-							function() {
-							},
+						application.player._update().error(
 							function() {
 								$location.path("/");
-							}
-						);
+							});
 
 						var volume = Number(application.player.Volume);
 						if (!isNaN(volume)) {

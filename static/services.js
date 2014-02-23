@@ -44,8 +44,6 @@ mprisServices.factory('application', ['$http', '$timeout',
 
 			_set: function(data) {
 				// data: {'Shuffle': true}
-				console.log("player.set");
-				console.log(data);
 				$http.post(
 					player._url,
 					data
@@ -122,26 +120,14 @@ mprisServices.factory('application', ['$http', '$timeout',
 					return;
 				}
 
-				return $http.get(application._url).then(
-					function(response) {
-						application._bus = response.data.bus;
-						application.Identity = response.data.Identity;
-
-						if (response.data.hasOwnProperty("player")) {
-							application.player.PlaybackStatus = response.data.player.PlaybackStatus;
-							application.player._url = response.data.player.url;
-						}
-						else {
-							application.player._url = application._url + "player/";
-						}
+				return $http({method: 'GET', url: application._url})
+					.success(function(data, status, headers, config) {
+						application._bus = data.bus;
+						application.Identity = data.Identity;
+						application.player._url = application._url + "player/";
 
 						return application.player._update();
-					},
-					function(err) {
-						console.log("application update network error");
-						throw err;
-					}
-				);
+					});
 			},
 
 			_reset: function() {

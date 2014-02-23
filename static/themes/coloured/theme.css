@@ -5,20 +5,13 @@ body {
 
 button {
 	padding: 0;
+	background-color: #444;
+	color: #fff;
 }
-/*
-.page {
-	width: 310px;
-	height: 352px;
-	border: 1px dashed red;
-	position: relative;
-}
-*/
+
 .head {
 	background-color: #5af;
 	position: relative;
-	/*padding: 16px;*/
-	/*height: 16px;*/
 }
 
 .head button {
@@ -33,13 +26,6 @@ button {
 .head button span {
 	display: none;
 }
-
-.body {
-	position: absolute;
-	top: 48px;
-	width: 100%;
-}
-
 .footer {
 	position: absolute;
 	bottom: 0;
@@ -75,92 +61,26 @@ h1 {
 }
 
 
-.control-panel {
-    background-color: red;
-    text-align: center;
-}
-.control-panel button {
-    background-color: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    display: inline;
-    vertical-align: middle;
-    font-size: 32px;
-    width: 32px;
-}
-.control-panel button span {
-    display: none;
-}
-.control-panel .btn-group {
-    display: inline;
-    padding: 0 16px;
-}
-.control-panel .btn-group button {
-    font-size: 48px;
-    width: 64px;
-}
-.control-panel .btn-group .btnPause,
-.control-panel .btn-group .btnPlay {
-    font-size: 64px;
-    width: 64px;
-}
 
-
-
-/*
-#apps ul {
+#applist ul {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 }
-#apps li {
-	border-bottom: 1px solid #579;
+#applist li {
+	background-color: gray;
 }
-#apps ul a {
-	color: #eee;
+#applist a {
 	text-decoration: none;
 	display: block;
-	padding: 16px 8px;
-}
-
-#playcontrols {
-	position: relative;
-	background-color: #FF6E00;
-	text-align: center;
-	color: white;
+	padding: 16px 12px;
 	margin: 0;
-	padding: 8px 0;
-	height: 32px;
-}
-#playcontrols button {
-	border: none;
-	background: none;
-	color: white;
-	vertical-align: middle;
-	line-height: 32px;
-	font-size: 24px;
-	width: 32px;
-}
-#playcontrols button span {
-	display: none;
 }
 
-.btnPlay,
-.btnPause {
-	font-size: 32px !important;
-	vertical-align: middle;
-	margin: 0 16px;
-}
-.btnPrev,
-.btnNext {
-	font-size: 24px !important;
-	width: 32px;
-	line-height: 32px;
-	vertical-align: middle;
-}
 
-*/
+/*
+ * Player
+ */
 .metadata {
 	text-align: center;
 }
@@ -184,18 +104,49 @@ h1 {
 }
 
 
+.control-panel {
+	background-color: red;
+	text-align: center;
+}
+.control-panel button {
+	background-color: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	display: inline;
+	vertical-align: middle;
+	font-size: 32px;
+	line-height: 1.2em;
+	width: 1.2em;
+}
+.control-panel button span {
+	display: none;
+}
+.control-panel .btn-group {
+	display: inline;
+	padding: 0 8px;
+}
+.control-panel .btn-group button {
+	font-size: 48px;
+}
+.control-panel .btn-group .btnPause,
+.control-panel .btn-group .btnPlay {
+	font-size: 64px;
+}
+
+
 
 .progress-panel {
-    position: relative;
+	position: relative;
 	background-color: gray;
 	height: 24px;
-    padding: 8px 8px 0;
+	padding: 8px 8px 0;
 }
 
 .progress {
 	background-color: white;
 	height: 16px;
-	margin: 0 48px;
+	margin: 0 64px;
 }
 .progress .bar {
 	background-color: black;
@@ -212,18 +163,18 @@ h1 {
 
 .volume-panel {
 	text-align: center;
-    background-color: gray;
-    height: 32px;
-    position: relative;
+	background-color: gray;
+	height: 32px;
+	position: relative;
 }
 .volume-panel button {
-    border: none;
+	border: none;
 	color: white;
-    height: 32px;
+	height: 32px;
 	width: 32px;
-    font-size: 24px;
-    padding: 0;
-    margin: 0;
+	font-size: 24px;
+	padding: 0;
+	margin: 0;
 }
 .volume-panel button span {
 	display: none;
@@ -231,20 +182,20 @@ h1 {
 
 .btnVolumeDown {
 	position: absolute;
-    left: 0;
-    top: 0;
+	left: 0;
+	top: 0;
 }
 .btnVolumeUp {
 	position: absolute;
-    top: 0;
-    right: 0;
+	top: 0;
+	right: 0;
 }
 
 .volume {
-    position: absolute;
-    top: 8px;
-    left: 48px;
-    right: 48px;
+	position: absolute;
+	top: 8px;
+	left: 48px;
+	right: 48px;
 	height: 16px;
 	background-color: white;
 }
