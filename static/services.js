@@ -44,14 +44,15 @@ mprisServices.factory('application', ['$http', '$timeout',
 
 			_set: function(data) {
 				// data: {'Shuffle': true}
-				$http.post(
-					player._url,
-					data
-				);
 
 				angular.forEach(data, function(value, key) {
 					player[key] = value;
 				});
+
+				$http.post(
+					player._url,
+					data
+				);
 			},
 
 			// Reset the data associated with the player/track
@@ -106,7 +107,6 @@ mprisServices.factory('application', ['$http', '$timeout',
 								player.Metadata['mpris:artUrl'] = "/static/themes/dark/images/play.svg";
 							}
 						}
-
 						player.isPlaying = (player.PlaybackStatus == "Playing") ? true : false;
 					});
 			},
@@ -122,8 +122,8 @@ mprisServices.factory('application', ['$http', '$timeout',
 
 				return $http({method: 'GET', url: application._url})
 					.success(function(data, status, headers, config) {
-						application._bus = data.bus;
-						application.Identity = data.Identity;
+						console.log(data);
+						angular.extend(application, data);
 						application.player._url = application._url + "player/";
 
 						return application.player._update();
@@ -152,6 +152,28 @@ mprisServices.factory('application', ['$http', '$timeout',
 						CanSetFullscreen: false
 					}
 				);
+			},
+
+			_call: function(method, data) {
+				// method: "SetPosition"
+				// params: "{TrackId: 1, Position: 0}"
+				$http.post(
+					application._url + method,
+					(data !== undefined) ? data : {}
+				);
+			},
+
+			_set: function(data) {
+				// data: {'Shuffle': true}
+				console.log(data);
+				$http.post(
+					application._url,
+					data
+				);
+
+				angular.forEach(data, function(value, key) {
+					application[key] = value;
+				});
 			}
 		};
 

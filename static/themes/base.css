@@ -1,0 +1,224 @@
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+button {
+	padding: 0;
+	background-color: #444;
+	color: #fff;
+}
+
+.head {
+	background-color: #5af;
+	position: relative;
+}
+
+.head button {
+	display: block;
+	border: none;
+	font-size: 24px;
+	width: 32px;
+	height: 32px;
+	text-align: center;
+	padding: 0;
+}
+.head button span {
+	display: none;
+}
+.footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+
+h1 {
+	font-size: 16px;
+	line-height: 32px;
+	font-weight: normal;
+	text-align: center;
+	margin: 0;
+	padding: 0;
+}
+
+.btnBack {
+	background-color: red;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+.btnBack span {
+	display: none;
+}
+
+.btnSettings {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.btnSettings span {
+	display: none;
+}
+
+
+
+#applist ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+#applist li {
+	background-color: gray;
+}
+#applist a {
+	text-decoration: none;
+	display: block;
+	padding: 16px 12px;
+	margin: 0;
+}
+
+
+/*
+ * Player
+ */
+.metadata {
+	text-align: center;
+}
+
+.art {
+	margin-bottom: 4px;
+}
+.art img {
+	max-height: 120px;
+}
+.artist {
+	margin: 12px 0;
+}
+.album {
+	margin: 12px 0;
+}
+.title {
+	font-weight: bold;
+	margin: 12px 0;
+	font-size: 1.5em;
+}
+
+
+.control-panel {
+	background-color: red;
+	text-align: center;
+}
+.control-panel button {
+	background-color: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	display: inline;
+	vertical-align: middle;
+	font-size: 32px;
+	line-height: 1.2em;
+	width: 1.2em;
+}
+.control-panel button span {
+	display: none;
+}
+.control-panel .btn-group {
+	display: inline;
+	padding: 0 8px;
+}
+.control-panel .btn-group button {
+	font-size: 48px;
+}
+.control-panel .btn-group .btnPause,
+.control-panel .btn-group .btnPlay {
+	font-size: 64px;
+}
+
+
+
+.progress-panel {
+	position: relative;
+	background-color: gray;
+	height: 24px;
+	padding: 8px 8px 0;
+}
+
+.progress {
+	background-color: white;
+	height: 16px;
+	margin: 0 64px;
+}
+.progress .bar {
+	background-color: black;
+	height: 16px;
+}
+.progress-length {
+	float: right;
+}
+.progress-text {
+	float: left;
+}
+
+
+
+.volume-panel {
+	text-align: center;
+	background-color: gray;
+	height: 32px;
+	position: relative;
+}
+.volume-panel button {
+	border: none;
+	color: white;
+	height: 32px;
+	width: 32px;
+	font-size: 24px;
+	padding: 0;
+	margin: 0;
+}
+.volume-panel button span {
+	display: none;
+}
+
+.btnVolumeDown {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+.btnVolumeUp {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.volume {
+	position: absolute;
+	top: 8px;
+	left: 48px;
+	right: 48px;
+	height: 16px;
+	background-color: white;
+}
+
+.volume .bar {
+	background-color: black;
+	height: 16px;
+}
+
+
+#settings, #tracklist, #playlists {
+	display: none;
+}
+
+
+
+
+.settings {
+	text-align: center;
+}
+.settings span {
+	display: none;
+}
+.settings div {
+	display: inline;
+}

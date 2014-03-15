@@ -3,41 +3,19 @@
 		<button class="btn btnBack"
 		        ng-click="buttonApplicationList()">
 			<i class="fa fa-chevron-left"></i>
-			<span>Applications</span>
+			<span>Back</span>
 		</button>
 
 		<h1>{{ app.Identity }}</h1>
 
-		<button class="btn btnSettings"
+		<!--<button class="btn btnSettings"
 		        ng-click="buttonSettings()">
 			<i class="fa fa-cog"></i>
 			<span>Settings</span>
-		</button>
+		</button>-->
 	</div>
 
 	<div class="body">
-		<div class="metadata">
-			<div class="art">
-				<img ng-src="{{ app.player.Metadata['xesam:artUrl'] }}"/>
-			</div>
-
-			<div class="artist">
-				<span ng-repeat="artist in app.player.Metadata['xesam:artist']">
-					{{ artist }}
-				</span>
-			</div>
-
-			<div class="album">
-				{{ app.player.Metadata['xesam:album'] }}
-			</div>
-
-			<div class="title">
-				{{ app.player.Metadata['xesam:title'] }}
-			</div>
-		</div>
-	</div>
-
-	<div class="footer">
 		<div class="progress-panel">
 			<div class="progress-text">
 				{{ positionAsText() }}
@@ -51,51 +29,32 @@
 				<div class="bar" ng-style="{ width: positionAsPercentage() + '%' }"></div>
 			</div>
 		</div>
-
-		<div class="btn-toolbar control-panel">
-			<button class="btn btnTracklist"
-			        ng-click="buttonTracklist()">
-				<i class="fa fa-list"></i>
-				<span>Tracklist</span>
-			</button>
-
-			<div class="btn-group">
-				<button class="btn btnPrev"
-				        ng-show="app.player.CanGoPrevious"
-				        ng-click="buttonPrevious()">
-					<i class="fa fa-fast-backward"></i>
-					<span>Previous</span>
-				</button>
-				<button class="btn btnPlay"
-				        ng-click="buttonPlay()"
-				        ng-show="app.player.CanPlay && app.player.PlaybackStatus != 'Playing'">
-					<i class="fa fa-play"></i>
-					<span>Play</span>
-				</button>
-				<button class="btn btnPause"
-				        ng-click="buttonPause()"
-				        ng-show="app.player.CanPause && app.player.PlaybackStatus == 'Playing'">
-					<i class="fa fa-pause"></i>
-					<span>Pause</span>
-				</button>
-				<button class="btn btnNext"
-				        ng-show="app.player.CanGoNext"
-				        ng-click="buttonNext()">
-					<i class="fa fa-fast-forward"></i>
-					<span>Next</span>
-				</button>
+		<div class="metadata">
+			<div class="art">
+				<img ng-src="{{ app.player.Metadata['mpris:artUrl'] }}"/>
 			</div>
 
-			<button class="btn btnPlaylists"
-			        ng-click="buttonPlaylists()">
-				<i class="fa fa-list-alt"></i>
-				<span>Playlists</span>
-			</button>
-		</div>
+			<div class="title">
+				{{ app.player.Metadata['xesam:title'] }}
+			</div>
 
+			<div class="artist">
+				<span ng-repeat="artist in app.player.Metadata['xesam:artist']">
+					{{ artist }}
+				</span>
+			</div>
+
+			<div class="album">
+				{{ app.player.Metadata['xesam:album'] }}
+			</div>
+		</div>
+	</div>
+
+	<div class="footer">
 		<div class="volume-panel">
 			<button class="btn btnVolumeDown"
-			        ng-click="buttonVolumeDown()">
+			        ng-click="buttonVolumeDown()"
+			        ng-disabled="!app.player.CanControl">
 				<i class="fa fa-volume-down"></i>
 				<span>Decrease</span>
 			</button>
@@ -105,85 +64,103 @@
 			</div>
 
 			<button class="btn btnVolumeUp"
-			        ng-click="buttonVolumeUp()">
+			        ng-click="buttonVolumeUp()"
+			        ng-disabled="!app.player.CanControl">
 				<i class="fa fa-volume-up"></i>
 				<span>Increase</span>
 			</button>
 		</div>
-	</div>
-</div>
 
-<div class="page" id="settings">
-	<div class="head">
-		<button class="btn btnBack"
-		        ng-click="buttonBack()">
-			<i class="fa fa-chevron-left"></i>
-			<span>Player</span>
-		</button>
-		<h1>Settings</h1>
-	</div>
-
-	<div class="body">
-		<div class="control-group">
-			<label class="control-label" for="shuffleToggle">
-				Shuffle
-			</label>
-
-			<div class="controls">
-				<input type="checkbox"
-				       id="shuffleToggle"
-				       ng-model="app.player.Shuffle"
-				       ng-change="buttonShuffle()">
-			</div>
-		</div>
-
-		<div>
-			<label>Repeat</label>
-			<div class="btn-group" data-toggle="buttons-radio">
-				<button class="btn"
-				        ng-model="app.player.LoopStatus"
-				        btn-radio="'None'"
-				        ng-click="buttonLoopStatus('None')">
-					<span>No repeat</span>
+		<div class="btn-toolbar control-panel">
+			<div class="btn-group">
+				<button class="btn btnPrev"
+				        ng-show="app.player.CanGoPrevious"
+				        ng-click="buttonPrevious()"
+				        ng-disabled="!app.player.CanControl">
+					<i class="fa fa-backward"></i>
+					<span>Previous</span>
 				</button>
-				<button class="btn"
-				        ng-model="app.player.LoopStatus"
-				        btn-radio="'Track'"
-				        ng-hide="app._bus=='org.mpris.MediaPlayer2.rhythmbox'"
-				        ng-click="buttonLoopStatus('Track')">
-					<span>Repeat track</span>
+				<button class="btn btnPlay"
+				        ng-click="buttonPlay()"
+				        ng-show="app.player.CanPlay && app.player.PlaybackStatus != 'Playing'"
+				        ng-disabled="!app.player.CanControl">
+					<i class="fa fa-play"></i>
+					<span>Play</span>
 				</button>
-				<button class="btn"
-				        ng-model="app.player.LoopStatus"
-				        btn-radio="'Playlist'"
-				        ng-click="buttonLoopStatus('Playlist')">
-					<span>Repeat playlist</span>
+				<button class="btn btnPause"
+				        ng-click="buttonPause()"
+				        ng-show="app.player.CanPause && app.player.PlaybackStatus == 'Playing'"
+				        ng-disabled="!app.player.CanControl">
+					<i class="fa fa-pause"></i>
+					<span>Pause</span>
+				</button>
+				<button class="btn btnNext"
+				        ng-show="app.player.CanGoNext"
+				        ng-click="buttonNext()"
+				        ng-disabled="!app.player.CanControl">
+					<i class="fa fa-forward"></i>
+					<span>Next</span>
 				</button>
 			</div>
 		</div>
 
-		<button class="btn"
-		        ng-show="application.CanSetFullscreen"
-		        ng-click="buttonFullscreen()"
-		        ng-model="application.Fullscreen"
-		        btn-checkbox>
-			<i class="fa fa-fullscreen"></i>
-			<span>Fullscreen</span>
-		</button>
+		<div class="settings">
+			<div class="btn-group btnLoop">
+				<button class="btn btnShuffle"
+				        ng-click="buttonShuffle()"
+				        ng-show="app.player.Shuffle">
+					<i class="fa fa-random"></i>
+					<span>Shuffling</span>
+				</button>
+				<button class="btn btnShuffle"
+				        ng-click="buttonShuffle()"
+				        ng-show="!app.player.Shuffle">
+					<i class="fa fa-long-arrow-right"></i>
+					<span>No Shuffle</span>
+				</button>
 
-		<button class="btn"
-		        ng-show="application.CanRaise"
-		        ng-click="buttonRaise()">
-			<i class="fa fa-eye"></i>
-			<span>Raise</span>
-		</button>
+				<button class="btn btnLoopNone"
+				        ng-click="buttonLoopStatus('None')"
+				        ng-class="{active: app.player.LoopStatus=='None'}"
+				        title="No repeat">
+					<i class="fa fa-long-arrow-right"></i>
+					<span>None</span>
+				</button>
 
-		<button class="btn"
-		        ng-show="application.CanQuit"
-		        ng-click="buttonQuit()">
-			<i class="fa fa-power-off"></i>
-			<span>Quit</span>
-		</button>
+				<button class="btn btnLoopPlaylist"
+				        ng-class="{active: app.player.LoopStatus=='Playlist'}"
+				        ng-click="buttonLoopStatus('Playlist')"
+				        title="Repeat playlist">
+					<i class="fa fa-refresh"></i>
+					<span>Playlist</span>
+				</button>
+
+				<button class="btn"
+				        ng-show="app.CanSetFullscreen"
+				        ng-click="buttonFullscreen()"
+				        ng-model="application.Fullscreen"
+				        ng-disabled="!app.CanSetFullscreen">
+					<i class="fa fa-fullscreen"></i>
+					<span>Fullscreen</span>
+				</button>
+
+				<button class="btn"
+				        ng-show="app.CanRaise"
+				        ng-click="buttonRaise()"
+				        ng-disabled="!app.CanRaise">
+					<i class="fa fa-eye"></i>
+					<span>Raise</span>
+				</button>
+
+				<button class="btn"
+				        ng-show="app.CanQuit"
+				        ng-click="buttonQuit()"
+				        ng-disabled="!app.CanQuit">
+					<i class="fa fa-power-off"></i>
+					<span>Quit</span>
+				</button>
+			</div>
+		</div>
 	</div>
 </div>
 

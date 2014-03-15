@@ -26,6 +26,8 @@ mprisControllers.controller('ApplicationCtrl', [
 		var pollInterval = 1000; // milliseconds
 		var poller = null;
 
+		$scope.showSettings = false;
+
 		$scope.app = application;
 
 		if (!application.hasOwnProperty("_bus") || application._bus === null) {
@@ -139,14 +141,7 @@ mprisControllers.controller('ApplicationCtrl', [
 				var length = (p.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
 				var position = length * p.Position; // position in seconds
 
-				var minutes = Math.floor(position / 60.0);
-				var seconds = Math.floor(position % 60);
-
-				if (seconds < 10) {
-					seconds = "0" + seconds;
-				}
-
-				return minutes + ":" + seconds;
+				return createTimeString(position);
 			}
 
 			return "0:00";
@@ -158,25 +153,43 @@ mprisControllers.controller('ApplicationCtrl', [
 			if (p.Metadata !== undefined) {
 				var length = p.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
 
-				var minutes = Math.floor(length / 60.0);
-				var seconds = length % 60;
-
-				if (seconds < 10) {
-					seconds = "0" + seconds;
-				}
-
-				return minutes + ":" + seconds;
+				return createTimeString(length);
 			}
 
 			return "0:00";
 		};
 
+		// Takes an integer value of seconds
+		// converts to formatted string
+		function createTimeString(num) {
+			var hours = 0;
+			var minutes = Math.floor(num / 60.0);
+			var seconds = Math.floor(num % 60);
+
+			if (seconds < 10) {
+				seconds = "0" + seconds;
+			}
+
+			if (minutes > 60) {
+				hours = Math.floor(minutes / 60);
+				minutes = Math.floor(minutes % 60)
+
+				if (minutes < 10) {
+					minutes = "0" + minutes;
+				}
+
+				return hours + ":" + minutes + ":" + seconds;
+			}
+
+			return minutes + ":" + seconds;
+		}
+
 		$scope.buttonShuffle = function() {
-			application.player._set({'Shuffle': application.player.Shuffle});
+			application.player._set({'Shuffle': !application.player.Shuffle});
 		};
 
-		$scope.buttonLoopStatus = function(loop) {
-			application.player._set({'LoopStatus': loop});
+		$scope.buttonLoopStatus = function(newStatus) {
+			application.player._set({'LoopStatus': newStatus});
 		};
 
 		$scope.buttonFullscreen = function() {

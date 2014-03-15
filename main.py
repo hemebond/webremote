@@ -59,36 +59,26 @@ def get_application_list():
 	return applications
 
 
-def get_player_root(handler, requested_mimetype):
-	pass
-
-
-def test_url_patterns(url):
+def get_pattern(url):
 	patterns = [
 		(r'^/$', 'index'),
 		(r'^/static/', 'static'),
 		(r'^/art/(?P<application>[\w\d]+)/(?P<image>[\w\d]+)', 'art'),
 		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
-		(r'^/(?P<application>[\w\d]+)/player/', 'player'),
-		(r'^/(?P<application>[\w\d]+)/(\?.+)?', 'application'),
+		(r'^/(?P<application>[\w\d]+)/player/(?P<action>\w+)?', 'player'),
+		(r'^/(?P<application>[\w\d]+)/(?P<action>\w+)?(?P<querystring>\?[\w\d\=]+)?', 'application'),
 	]
 
-	for pattern, pattern_name in patterns:
+	for pattern, urlname in patterns:
 		matches = re.match(pattern, url)
 
 		if matches:
 			return (
-				pattern_name,
-				matches
+				urlname,
+				matches.groupdict()
 			)
 
 	return (None, None)
-
-
-def do_art(request, application, image):
-	print(application)
-	print(image)
-	return
 
 
 # This class will handles any incoming request from the browser
@@ -98,9 +88,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		output = None
 		requested_mimetype = None
 
-		match_name, matches = test_url_patterns(self.path)
-
-		if match_name is None:
+		urlname, urlargs = get_pattern(self.path)
+		if urlname is None:
 			self.send_error(404, "File not found")
 
 		accept_header = self.headers.get("accept")
@@ -110,14 +99,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		#
 		# Static files
 		#
-		if match_name == 'static':
+		if urlname == 'static':
 			return super(RequestHandler, self).do_GET()
-
-		elif match_name == 'art':
-			do_art(self, **matches.groupdict())
-			return
-			application_name = matches.groupdict()['application']
-			filename = matches.groupdict()['image']
+		#
+		# Album art
+		#
+		elif urlname == 'art':
+			application_name = urlargs['application']
+			filename = urlargs['image']
 
 			home = os.path.expanduser("~")
 
@@ -145,10 +134,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 			if modified:
 				self.send_response(200)
-			else:
-				self.send_response(304)
-
-			if modified:
 				with open(file_path, 'rb') as f:
 					image_data = f.read()
 
@@ -159,6 +144,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						self.send_error(500, "Could not determine file type")
 
 				self.send_header("Content-type", "image/" + image_type)
+			else:
+				self.send_response(304)
 
 			self.send_header("Content-length", image_size)
 			self.send_header("Last-Modified", last_modified)
@@ -168,35 +155,35 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				self.wfile.write(image_data)
 			return
 
+		#
+		# Data
+		#
 		elif requested_mimetype == "application/json":
 			#
 			# Root
 			#
-			if match_name == 'index':
+			if urlname == 'index':
 				# return the dict of applications as a JSON array
 				# {"my_application": "My Application"}
 				output = json.dumps(get_application_list())
 			#
 			# Playlists
 			#
-			elif match_name == 'playlists':
+			elif urlname == 'playlists':
 				# return status as JSON string
-				application_name = matches.groupdict()['application']
-
+				application_name = urlargs['application']
 				application = self.get_application(application_name)
 
 				if application is None:
 					return
 
 				output = json.dumps([])
-
 			#
 			# Player
 			#
-			elif match_name == 'player':
+			elif urlname == 'player':
 				# return status as JSON string
-				application_name = matches.groupdict()['application']
-
+				application_name = urlargs['application']
 				application = self.get_application(application_name)
 
 				if application is None:
@@ -252,30 +239,28 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				output['url'] = "/%s/player/" % application_name
 
 				# make output a diff of the currently cached response
-				if self.client_address[0] in response_cache:
-					diff = {}
+				# if self.client_address[0] in response_cache:
+				# 	diff = {}
 
-					cache = response_cache[self.client_address[0]]
+				# 	cache = response_cache[self.client_address[0]]
 
-					for key in output:
-						if key in cache:
-							if output[key] != cache[key]:
-								cache[key] = output[key]
-								diff[key] = output[key]
-						else:
-							diff[key] = output[key]
-					output = diff
-				else:
-					response_cache[self.client_address[0]] = output
+				# 	for key in output:
+				# 		if key in cache:
+				# 			if output[key] != cache[key]:
+				# 				cache[key] = diff[key] = output[key]
+				# 		else:
+				# 			diff[key] = output[key]
+				# 	output = diff
+				# else:
+				# 	response_cache[self.client_address[0]] = output
 
 				output = json.dumps(output)
 
 			#
 			# Application
 			#
-			elif match_name == 'application':
-				application_name = matches.groupdict()['application']
-
+			elif urlname == 'application':
+				application_name = urlargs['application']
 				application = self.get_application(application_name)
 
 				if application is not None:
@@ -296,9 +281,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						try:
 							output[p] = getattr(application, p)
 						except dbus.exceptions.DBusException:
-							pass
+							print("No app property %s" % p)
+							#pass
 
-					output['bus'] = application.path
+					output['_bus'] = application.path
 
 					output = json.dumps(output)
 		#
@@ -309,9 +295,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			#return SimpleHTTPRequestHandler.do_GET(self)
 			with open("index.html") as f:
 				output = f.read()
-
-			initial_app_list = json.dumps(get_application_list())
-			output = output.replace("initialAppList=[]", "initialAppList=%s" % initial_app_list)
 
 			# reset the response cache for this user
 			if self.client_address[0] in response_cache:
@@ -334,6 +317,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		content_type = self.headers.get_content_type()
 		content_length = int(self.headers['Content-length'])
 
+		urlname, urlargs = get_pattern(self.path)
+
+		if urlname is None:
+			self.send_error(404, "File not found")
+
 		if content_type == 'application/json':
 			qs = self.rfile.read(content_length).decode('UTF-8')
 			post_data = json.loads(qs)
@@ -341,84 +329,61 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			post_data = {}
 
 		# Call a method on the player
-		m = re.match('/(?P<application>\w+)/player/(?P<action>\w+)$', self.path)
-		if m:
-			groups = m.groupdict()
-			application_name = groups['application']
+		if urlname == "player":
+			application_name = urlargs['application']
 			application = self.get_application(application_name)
 
 			if application is None:
 				return
 
-			action = groups['action']
+			action = urlargs.get('action')
+			if action is not None:
+				try:
+					getattr(application.player, action)(**post_data)
+				except AttributeError:
+					self.send_response(
+						404, message="No method \"%s\"" % action
+					)
+					return
 
-			try:
-				getattr(application.player, action)(**post_data)
-			except AttributeError:
-				self.send_response(
-					404, message="No method \"%s\"" % action
-				)
+				self.send_response(200)
+				return
+			else:
+				for key, val in post_data.items():
+					if hasattr(application.player, key):
+						if isinstance(val, list):
+							val = val[0]
+
+						setattr(application.player, key, val)
+
+				self.send_response(200)
 				return
 
-			self.send_response(200)
-			return
-
-		# Set properties on the player
-		m = re.match('/(?P<application>\w+)/player/$', self.path)
-		if m:
-			# posting new properties to the player
-			application_name = m.groupdict()['application']
+		if urlname == "application":
+			application_name = urlargs['application']
 			application = self.get_application(application_name)
 
 			if application is None:
 				return
 
-			for key, val in post_data.items():
-				if hasattr(application.player, key):
-					if isinstance(val, list):
-						val = val[0]
+			if "action" in urlargs:
+				action = urlargs['action']
 
-					setattr(application.player, key, val)
+				response_code, response_message = self.call_method(application, action, post_data)
 
-			self.send_response(200)
-			return
-
-		# Call a method on the application
-		m = re.match('/(?P<application>\w+)/(?P<action>\w+)$', self.path)
-		if m:
-			groups = m.groupdict()
-			application_name = groups['application']
-			application = self.get_application(application_name)
-
-			if application is None:
+				self.send_response(response_code, message=response_message)
 				return
+			else:
+				# posting new properties to the application
+				for key, val in post_data.items():
+					if hasattr(application, key):
+						if isinstance(val, list):
+							val = val[0]
 
-			action = groups['action']
+						setattr(application, key, val)
 
-			response_code, response_message = self.call_method(application, action, post_data)
-
-			self.send_response(response_code, message=response_message)
-			return
-
-		# Set properties on the application
-		m = re.match('/(?P<application>\w+)/$', self.path)
-		if m:
-			# posting new properties to the application
-			application_name = m.groupdict()['application']
-			application = self.get_application(application_name)
-
-			if application is None:
+				self.send_response(200)
 				return
-
-			for key, val in post_data.items():
-				if hasattr(application, key):
-					if isinstance(val, list):
-						val = val[0]
-
-					setattr(application, key, val)
-
-			self.send_response(200)
-			return
 
 		self.send_response(405) # Method Not Allowed
 		return

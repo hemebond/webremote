@@ -1,17 +1,25 @@
 body {
 	margin: 0;
 	font-family: sans-serif;
+	background: #1F1F21 radial-gradient(ellipse at center, #3f4042 0%, #1F1F21 90%) no-repeat; /* W3C */
 }
 
 button {
 	padding: 0;
-	background-color: #444;
 	color: #fff;
+	background-color: transparent;
+}
+button[disabled='disabled'] {
+	color: #808080;
 }
 
 .head {
 	background-color: #5af;
 	position: relative;
+	background: linear-gradient(to bottom, #99b83d 0%,#5f8f1d 100%); /* W3C */
+	border-bottom: 1px solid #000;
+	border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
 }
 
 .head button {
@@ -23,9 +31,7 @@ button {
 	text-align: center;
 	padding: 0;
 }
-.head button span {
-	display: none;
-}
+
 .footer {
 	position: absolute;
 	bottom: 0;
@@ -34,22 +40,33 @@ button {
 
 h1 {
 	font-size: 16px;
-	line-height: 32px;
-	font-weight: normal;
+	line-height: 43px;
+	font-weight: bold;
 	text-align: center;
 	margin: 0;
 	padding: 0;
+	color: #fff;
 }
 
-.btnBack {
-	background-color: red;
+button.btnBack {
 	position: absolute;
-	top: 0;
-	left: 0;
+	top: 6px;
+	left: 6px;
+	width: auto;
+	height: 28px;
+	font-size: 16px;
+	line-height: 27px;
+	background: none;
+	padding: 0 6px;
+	border: 1px solid rgba(0, 0, 0, .3);
+	border-radius: 5px;
 }
-.btnBack span {
+.btnBack i {
 	display: none;
 }
+/*.btnBack span {
+	display: none;
+}*/
 
 .btnSettings {
 	position: absolute;
@@ -83,41 +100,43 @@ h1 {
  */
 .metadata {
 	text-align: center;
+	color: #808080;
 }
 
 .art {
 	margin-bottom: 4px;
+	margin-top: 8px;
 }
 .art img {
+	width: 120px;
 	max-height: 120px;
+	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, .8);
 }
 .artist {
-	margin: 12px 0;
+	margin: 6px 0;
 }
 .album {
-	margin: 12px 0;
+	margin: 6px 0;
 }
 .title {
 	font-weight: bold;
-	margin: 12px 0;
-	font-size: 1.5em;
+	margin: 6px 0;
+	color: white;
 }
 
 
 .control-panel {
-	background-color: red;
 	text-align: center;
+
 }
 .control-panel button {
-	background-color: none;
 	border: none;
-	padding: 0;
+	padding: 0 16px;
 	margin: 0;
 	display: inline;
 	vertical-align: middle;
 	font-size: 32px;
-	line-height: 1.2em;
-	width: 1.2em;
+	text-shadow: 0 1px 5px #000;
 }
 .control-panel button span {
 	display: none;
@@ -138,19 +157,32 @@ h1 {
 
 .progress-panel {
 	position: relative;
-	background-color: gray;
 	height: 24px;
 	padding: 8px 8px 0;
+	background: black linear-gradient(to bottom, #494a4c 0%,#2e2f30 100%); /* W3C */
+	color: #bbb;
+	border-bottom: 1px solid black;
+	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, .2);
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 16px;
 }
-
 .progress {
 	background-color: white;
-	height: 16px;
-	margin: 0 64px;
+	margin: 4px 64px 0 64px;
+	top: 10px;
+	height: 8px;
+	padding: 1px;
+	background: linear-gradient(to bottom, #2c2d2e 0%,#303133 100%); /* W3C */
+	border-radius: 10px;
+	border: 1px solid rgba(0, 0, 0, 0.5);
 }
 .progress .bar {
 	background-color: black;
 	height: 16px;
+	height: 8px;
+	border-radius: 10px;
+	background: white linear-gradient(to right, #85ad2a 0%,#a0d028 50%,#b6d028 100%); /* W3C */
 }
 .progress-length {
 	float: right;
@@ -163,9 +195,11 @@ h1 {
 
 .volume-panel {
 	text-align: center;
-	background-color: gray;
 	height: 32px;
 	position: relative;
+	background: black linear-gradient(to bottom, #494a4c 0%,#2e2f30 100%); /* W3C */
+	border-top: 1px solid #666;
+	border-bottom: 1px solid #000;
 }
 .volume-panel button {
 	border: none;
@@ -175,6 +209,7 @@ h1 {
 	font-size: 24px;
 	padding: 0;
 	margin: 0;
+	text-shadow: 0 1px 5px #000;
 }
 .volume-panel button span {
 	display: none;
@@ -193,19 +228,57 @@ h1 {
 
 .volume {
 	position: absolute;
-	top: 8px;
+	top: 10px;
 	left: 48px;
 	right: 48px;
-	height: 16px;
-	background-color: white;
+	height: 8px;
+	padding: 1px;
+	background: linear-gradient(to bottom, #2c2d2e 0%,#303133 100%); /* W3C */
+	border-radius: 10px;
+	border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .volume .bar {
-	background-color: black;
-	height: 16px;
+	height: 8px;
+	border-radius: 10px;
+	background: white linear-gradient(to right, #85ad2a 0%,#a0d028 50%,#b6d028 100%); /* W3C */
 }
 
 
 #settings, #tracklist, #playlists {
 	display: none;
+}
+
+
+
+
+.settings {
+	text-align: center;
+	padding: 8px 0;
+}
+.settings span {
+	display: none;
+}
+.settings .btn-group {
+	display: inline-block;
+	background: black linear-gradient(to bottom, #494a4c 0%,#2e2f30 100%); /* W3C */
+	border: 1px solid rgba(0, 0, 0, 0.6);
+	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, .8);
+	border-radius: 10px;
+}
+.settings button {
+	border: none;
+	padding: 8px;
+	position: relative;
+	float: left;
+	white-space: nowrap;
+}
+
+.btnLoopNone,
+.btnLoopPlaylist {
+	color: #808080;
+}
+.btnLoopNone.active,
+.btnLoopPlaylist.active {
+	color: #fff;
 }
