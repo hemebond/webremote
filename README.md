@@ -1,7 +1,5 @@
 # Web Remote
-Web Remote is a web interface to media players that implement the MPRIS D-Bus Interface Specification v2.2.
-
-Icons were created from the [Faenza icon theme](http://code.google.com/p/faenza-icon-theme/).
+Web Remote is a Python 3 web interface to media players that implement the MPRIS D-Bus Interface Specification v2.2.
 
 ## Usage
 Run
