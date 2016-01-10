@@ -115,7 +115,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			filename = urlargs['image']
 
 			user_home_dir = os.path.expanduser("~")
-			print(user_home_dir)
 
 			art_directories = {
 				'rhythmbox': os.path.join(user_home_dir, '.cache/rhythmbox/album-art'),
@@ -137,8 +136,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				image_size = image_stat.st_size
 				image_mtime = image_stat.st_mtime
 				last_modified = datetime.fromtimestamp(image_mtime).strftime("%a, %d %b %Y %H:%M:%S GMT")
-			except OSError as err:
-				print(err)
+			except OSError as e:
+				print(e)
 				self.send_error(404, "File not found")
 				return
 
