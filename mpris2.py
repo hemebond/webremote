@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
+
+#
+# This file contains objects for using DBus items and is used by the HTTP server 
+#
+
+
 import dbus, re
 #from utils import to_native_type
 
@@ -23,9 +29,11 @@ mpris2_object_path = "/org/mpris/MediaPlayer2"
 mpris2_interface = "org.mpris.MediaPlayer2"
 
 
-# From http://code.google.com/p/dbus-tools/
-# Transform dbus types into native types
 def to_native_type(data):
+	"""
+		From http://code.google.com/p/dbus-tools/
+		Transform dbus types into native types
+	"""
 	if isinstance(data, dbus.Struct):
 		return tuple(to_native_type(x) for x in data)
 	elif isinstance(data, dbus.Array):
@@ -44,14 +52,23 @@ def to_native_type(data):
 		return int(data)
 
 def str2bool(value):
+	"""
+		Takes a "true" or "false" string and returns a Python boolean
+	"""
 	return {'true': True, 'false': False}[value.lower()]
 
 
 class PlayerNotRunning(Exception):
+	"""
+		Exception raised/returned when a player is accessed but not running
+	"""
 	pass
 
 
 class Player(object):
+	"""
+		An object for the mpris Player interface
+	"""
 	INTERFACE = "%s.Player" % mpris2_interface
 
 	def __init__(self, bus_object):
@@ -299,7 +316,11 @@ class Application(object):
 
 	@property
 	def Identity(self):
-		return self.get_property("Identity")
+		try:
+			return self.get_property("Identity")
+		except dbus.exceptions.DBusException as err:
+			# The player doesn't have an Identity property so return name from the path instead
+			return self.path.split('.')[-1]
 
 	@property
 	def DesktopEntry(self):

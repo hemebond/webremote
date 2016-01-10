@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with webremote.  If not, see <http://www.gnu.org/licenses/>.
 
+
+#
+# This file runs an HTTP server and will make DBus calls
+#
+
+
 import os
 import socket
 import argparse
@@ -63,7 +69,7 @@ def get_pattern(url):
 	patterns = [
 		(r'^/$', 'index'),
 		(r'^/static/', 'static'),
-		(r'^/art/(?P<application>[\w\d]+)/(?P<image>[\w\d]+)', 'art'),
+		(r'^/(?P<application>[\w\d]+)/art/(?P<image>[\w\d]+)', 'art'),
 		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
 		(r'^/(?P<application>[\w\d]+)/player/(?P<action>\w+)?', 'player'),
 		(r'^/(?P<application>[\w\d]+)/(?P<action>\w+)?(?P<querystring>\?[\w\d\=]+)?', 'application'),
@@ -108,14 +114,22 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			application_name = urlargs['application']
 			filename = urlargs['image']
 
-			home = os.path.expanduser("~")
+			user_home_dir = os.path.expanduser("~")
+			print(user_home_dir)
 
 			art_directories = {
-				'rhythmbox': home + "/.cache/rhythmbox/album-art/",
+				'rhythmbox': os.path.join(user_home_dir, '.cache/rhythmbox/album-art'),
+				'Noise': os.path.join(user_home_dir, '.cache/noise/album-art'),
 			}
 
-			art_dir = art_directories[application_name]
-			file_path = art_dir + filename
+			try:
+				art_dir = art_directories[application_name]
+			except KeyError as e:
+				print(e)
+				self.send_error(404, "File not found")
+				return
+
+			file_path = os.path.join(art_dir, filename)
 
 			try:
 				image_type = imghdr.what(file_path)
@@ -123,14 +137,15 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				image_size = image_stat.st_size
 				image_mtime = image_stat.st_mtime
 				last_modified = datetime.fromtimestamp(image_mtime).strftime("%a, %d %b %Y %H:%M:%S GMT")
-			except OSError:
+			except OSError as err:
+				print(err)
 				self.send_error(404, "File not found")
+				return
 
 			if self.headers['If-Modified-Since'] and self.headers['If-Modified-Since'] == last_modified:
 				modified = False
 			else:
 				modified = True
-
 
 			if modified:
 				self.send_response(200)
@@ -230,7 +245,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 						# output['Metadata']['art'] = "data:image/%s;base64,%s" % (image_type, image_64)
 						name = output['Metadata']['mpris:artUrl'].split("/")[-1]
-						output['Metadata']['mpris:artUrl'] = "/art/%s/%s" % (application_name, name)
+						output['Metadata']['mpris:artUrl'] = "/%s/art/%s" % (application_name, name)
 
 
 				if output['Metadata'] == {}:
