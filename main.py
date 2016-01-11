@@ -227,47 +227,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				if 'Metadata' in output:
 					if 'mpris:artUrl' in output['Metadata']:
-						# import base64
-						# import imghdr
-						# from urllib.request import urlopen
-
-						# url = output['Metadata']['mpris:artUrl']
-
-						# # Read the image byte stream
-						# image = urlopen(url).read()
-
-						# # Base64 encode the byte stream and then convert to a UTF-8 string
-						# image_64 = base64.b64encode(image).decode("UTF-8")
-
-						# # Detect the type of image
-						# image_type = imghdr.what("", h=image)
-
-						# output['Metadata']['art'] = "data:image/%s;base64,%s" % (image_type, image_64)
-						name = output['Metadata']['mpris:artUrl'].split("/")[-1]
-						output['Metadata']['mpris:artUrl'] = "/%s/art/%s" % (application_name, name)
-
+						if not output['Metadata']['mpris:artUrl'].startswith("http"):
+							name = output['Metadata']['mpris:artUrl'].split("/")[-1]
+							output['Metadata']['mpris:artUrl'] = "/%s/art/%s" % (application_name, name)
 
 				if output['Metadata'] == {}:
 					del output['Metadata']
 
 				output['url'] = "/%s/player/" % application_name
-
-				# make output a diff of the currently cached response
-				# if self.client_address[0] in response_cache:
-				# 	diff = {}
-
-				# 	cache = response_cache[self.client_address[0]]
-
-				# 	for key in output:
-				# 		if key in cache:
-				# 			if output[key] != cache[key]:
-				# 				cache[key] = diff[key] = output[key]
-				# 		else:
-				# 			diff[key] = output[key]
-				# 	output = diff
-				# else:
-				# 	response_cache[self.client_address[0]] = output
-
 				output = json.dumps(output)
 
 			#
