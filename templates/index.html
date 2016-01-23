@@ -1,0 +1,8 @@
+<!doctype html>
+<title>Applications</title>
+
+<ul>
+{% for app in data %}
+	<li><a href="{{app.links.self}}">{{ app.attributes.Identity }}</a></li>
+{% endfor %}
+</ul>

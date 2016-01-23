@@ -1,0 +1,46 @@
+<!doctype html>
+<title>{% if data is mapping %}{{ data.attributes.Identity }}{% endif %}</title>
+
+{% macro show_mapping(d) %}
+	<dl>
+		{% for a, v in d.items() %}
+			<dt>{{ a }}</dt>
+			{{ show_attribute_value(v) }}
+		{% endfor %}
+	</dl>
+{% endmacro %}
+
+{% macro show_attribute_value(v) %}
+	{% if v is mapping %}
+		<dd>
+			{{ show_mapping(v) }}
+		</dd>
+	{% elif v is not string and v is iterable %}
+		{% for vi in v %}
+			<dd>{{ vi }}</dd>
+		{% endfor %}
+	{% else %}
+		<dd>{{ v }}</dd>
+	{% endif %}
+{% endmacro %}
+
+<h1>Data</h1>
+
+{% if data is mapping %}
+	{{ show_mapping(data) }}
+{% elif data is iterable %}
+	<ul>
+		{% for li in data %}
+		<li>
+			{{ show_mapping(li) }}
+		</li>
+		{% endfor %}
+	</ul>
+{% endif %}
+
+<h1>Links</h1>
+<ul>
+	{% for rel, url in links.items() %}
+		<li><a href="{{ url }}">{{ rel }}</a></li>
+	{% endfor %}
+</ul>
