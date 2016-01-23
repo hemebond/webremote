@@ -53,21 +53,21 @@ def to_native_type(data):
 
 def str2bool(value):
 	"""
-		Takes a "true" or "false" string and returns a Python boolean
+	Takes a "true" or "false" string and returns a Python boolean
 	"""
 	return {'true': True, 'false': False}[value.lower()]
 
 
 class PlayerNotRunning(Exception):
 	"""
-		Exception raised/returned when a player is accessed but not running
+	Exception raised/returned when a player is accessed but not running
 	"""
 	pass
 
 
 class Player(object):
 	"""
-		An object for the mpris Player interface
+	An object for the mpris Player interface
 	"""
 	INTERFACE = "%s.Player" % mpris2_interface
 
@@ -83,6 +83,7 @@ class Player(object):
 
 		if property_name == "Position":
 			metadata = self.get_property("Metadata")
+
 			if 'mpris:length' in metadata:
 				if property_value != None:
 					property_value = float(property_value) / float(metadata['mpris:length'])
@@ -296,7 +297,10 @@ class Application(object):
 
 	@property
 	def Fullscreen(self):
-		return self.get_property("Fullscreen")
+		try:
+			return self.get_property("Fullscreen")
+		except dbus.exceptions.DBusException:
+			return False
 
 	@Fullscreen.setter
 	def Fullscreen(self, value):
@@ -304,7 +308,10 @@ class Application(object):
 
 	@property
 	def CanSetFullscreen(self):
-		return self.get_property("CanSetFullscreen")
+		try:
+			return self.get_property("CanSetFullscreen")
+		except dbus.exceptions.DBusException:
+			return False
 
 	@property
 	def CanRaise(self):
