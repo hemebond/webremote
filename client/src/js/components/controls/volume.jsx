@@ -9,21 +9,25 @@ function VolumeBar(props) {
 	)
 }
 
-const Volume = ({player}) => (
+const Volume = ({player, btnVolumeUp, btnVolumeDn}) => (
 	<div className="volume-panel">
 		<button className="btn btnVolumeDown"
-		        onClick={() => this.buttonVolumeDown()}
+		        onClick={btnVolumeDn}
 		        disabled={!player.CanControl}>
-			<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#volume-down"></use></svg>
+			<svg aria-hidden="true" focusable="false" className="svg-icon">
+				<use xlinkHref="#volume-down"></use>
+			</svg>
 			<span>Decrease</span>
 		</button>
 
 		<VolumeBar player={player} />
 
 		<button className="btn btnVolumeUp"
-		        onClick={() => this.buttonVolumeUp()}
+		        onClick={btnVolumeUp}
 		        disabled={!player.CanControl}>
-			<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#volume-up"></use></svg>
+			<svg aria-hidden="true" focusable="false" className="svg-icon">
+				<use xlinkHref="#volume-up"></use>
+			</svg>
 			<span>Increase</span>
 		</button>
 	</div>

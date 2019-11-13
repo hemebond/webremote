@@ -9,6 +9,10 @@ import Next from './components/controls/next';
 import PlayerMetadata from './components/display/metadata';
 
 
+const VOLUMEINCREMENTSIZE = 0.1;
+const VOLUMEPRECISION = 1;
+const POLLINTERVAL = 1000; // milliseconds
+
 function positionAsPercentage(position) {
 	/*
 	 *
@@ -58,7 +62,7 @@ class Player extends React.Component {
 
 		this.timerID = setInterval(
 			() => this.tick(),
-			1000
+			POLLINTERVAL
 		);
 	}
 
@@ -113,6 +117,10 @@ class Player extends React.Component {
 		this._set({'LoopStatus': newStatus});
 	}
 
+	btnPrevious() {
+		this._call('Previous');
+	}
+
 	btnNext() {
 		this._call('Next');
 	}
@@ -123,6 +131,30 @@ class Player extends React.Component {
 
 	btnPause() {
 		this._call('Pause');
+	}
+
+	adjustVolume(change) {
+		var p = this.state.player;
+		var currentVolume = parseFloat(parseFloat(p.Volume).toPrecision(VOLUMEPRECISION));
+		var newVolume = (currentVolume + change).toPrecision(VOLUMEPRECISION);
+
+		if (newVolume < 0.0) {
+			newVolume = 0.0;
+		}
+		else if (newVolume > 1.0) {
+			newVolume = 1.0;
+		}
+
+		this.state.volume = newVolume;
+		this._set({"Volume": newVolume});
+	}
+
+	btnVolumeUp() {
+		this.adjustVolume(+VOLUMEINCREMENTSIZE);
+	}
+
+	btnVolumeDn() {
+		this.adjustVolume(-VOLUMEINCREMENTSIZE);
 	}
 
 	tick() {
@@ -152,10 +184,10 @@ class Player extends React.Component {
 		return minutes + ":" + seconds;
 	}
 
-	positionAsText(player) {
-		if (player.Metadata !== undefined) {
-			var length = (player.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
-			var position = length * player.Position; // position in seconds
+	positionAsText() {
+		if (this.state.player.Metadata !== undefined) {
+			var length = (this.state.player.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
+			var position = length * this.state.player.Position; // position in seconds
 
 			return this.createTimeString(position);
 		}
@@ -163,9 +195,9 @@ class Player extends React.Component {
 		return "0:00"
 	};
 
-	trackLength(player) {
-		if (player.Metadata !== undefined) {
-			var length = player.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
+	trackLength() {
+		if (this.state.player.Metadata !== undefined) {
+			var length = this.state.player.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
 
 			return this.createTimeString(length);
 		}
@@ -184,22 +216,26 @@ class Player extends React.Component {
 			<div className="player">
 				<div className="head">
 					<button className="btn btnBack" onClick={this.props.btnBack}>
-						<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#chevron-left"></use></svg>
+						<svg aria-hidden="true" focusable="false" className="svg-icon">
+							<use xlinkHref="#chevron-left"></use>
+						</svg>
 						<span>Back</span>
 					</button>
 					<h1>{ app.Identity }</h1>
 				</div>
 
-				<Volume player={p} />
+				<Volume player={p}
+				        btnVolumeUp={() => this.btnVolumeUp()}
+				        btnVolumeDn={() => this.btnVolumeDn()} />
 
 				<PlayerMetadata metadata={p.Metadata} />
 
 				<div className="progress-panel">
-					<div className="progress-text">{this.positionAsText(p)}</div>
+					<div className="progress-text">{this.positionAsText()}</div>
 					<div className="progress">
 						<ProgressBar player={p}/>
 					</div>
-					<div className="progress-length">{this.trackLength(p)}</div>
+					<div className="progress-length">{this.trackLength()}</div>
 				</div>
 
 			    <div className="btn-toolbar control-panel">
