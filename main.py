@@ -302,8 +302,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			self.end_headers()
 
 			# Send the html message
-			self.wfile.write(output.encode("UTF-8"))
-			self.wfile.write(bytes("\n", 'UTF-8'))
+			try:
+				self.wfile.write(output.encode("UTF-8"))
+				self.wfile.write(bytes("\n", 'UTF-8'))
+			except BrokenPipeError as e:
+				pass
 
 		return
 
