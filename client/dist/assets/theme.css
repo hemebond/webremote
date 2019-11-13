@@ -1,0 +1,410 @@
+body {
+	margin: 0;
+	font-family: sans-serif;
+	background: #1F1F21 radial-gradient(ellipse at center, #3f4042 0%, #1F1F21 90%) no-repeat; /* W3C */
+}
+.svg-icon {
+	width: 1em;
+	height: 1em;
+	vertical-align: text-top;
+}
+button {
+	padding: 0;
+	color: #fff;
+	background-color: transparent;
+}
+button[disabled='disabled'] {
+	color: #808080;
+}
+
+.screen {
+	position: absolute;
+
+	width: 100%;
+	height: 100%;
+
+	overflow: hidden;
+
+	max-width: 580px;
+	max-height: 768px;
+
+	top: 50%;
+	left: 50%;
+
+	transform: translate(-50%, -50%);
+	-webkit-transform: translate(-50%, -50%);
+}
+.app {
+	width: 100%;
+	height: 100%;
+
+	top: 0;
+	left: 0;
+
+	position: absolute;
+
+	transition-property: left, top;
+	transition-duration: 0.25s;
+	-webkit-transition-property: left, top;
+	-webkit-transition-duration: 0.25s;
+}
+.applist {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	left: 0;
+}
+.tracklist, .playlists {
+	position: absolute;
+	left: 200%;
+	width: 100%;
+	height: 100%;
+}
+
+.player {
+	position: absolute;
+	left: 100%;
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
+.player .head {
+	vertical-align: middle;
+}
+.player .head button {
+	position: absolute;
+}
+.player h1 {
+	font-size: 1em;
+	font-weight: normal;
+	text-align: center;
+}
+
+.player {
+	display: flex;
+	flex-direction: column;
+}
+.player .metadata {
+	display: flex;
+	flex: 1;
+	justify-content: center;
+	flex-direction: column;
+}
+.player .controls .icon-wrapper {
+	 vertical-align: middle;
+	font-size: 32px;
+	text-shadow: 0 1px 5px #000;
+}
+
+.app.applist {
+	left: 0;
+}
+.app.player {
+	left: -100%;
+}
+.app.tracklist {
+	left: -200%;
+}
+.app.tracklist .playlists {
+	visibility:  hidden;
+}
+.app.playlists {
+	left: -200%;
+}
+.app.playlists .tracklist {
+	visibility:  hidden;
+}
+
+
+
+
+
+
+
+
+
+
+.head {
+	background-color: #5af;
+	position: relative;
+	background: linear-gradient(to bottom, #99b83d 0%,#5f8f1d 100%); /* W3C */
+	border-bottom: 1px solid #000;
+	border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
+}
+.head button {
+	display: block;
+	border: none;
+	font-size: 24px;
+	width: 32px;
+	height: 32px;
+	text-align: center;
+	padding: 0;
+}
+button.btnBack {
+	position: absolute;
+	top: 6px;
+	left: 6px;
+	width: auto;
+	height: 28px;
+	font-size: 16px;
+	/*line-height: 27px;*/
+	background: none;
+	padding: 0 6px;
+	border: 1px solid rgba(0, 0, 0, .3);
+	border-radius: 5px;
+}
+button.btnBack svg {
+	margin-top: 1px;
+}
+h1 {
+	font-size: 16px;
+	line-height: 43px;
+	font-weight: bold;
+	text-align: center;
+	margin: 0;
+	padding: 0;
+	color: #fff;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ * Player
+ */
+.metadata {
+	text-align: center;
+	color: #808080;
+}
+
+.art {
+	margin-bottom: 4px;
+	margin-top: 8px;
+}
+.art img {
+	width: 120px;
+	max-height: 120px;
+	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, .8);
+}
+.artist {
+	margin: 6px 0;
+}
+.album {
+	margin: 6px 0;
+}
+.title {
+	font-weight: bold;
+	margin: 6px 0;
+	color: white;
+}
+.control-panel {
+	text-align: center;
+  padding: 1em;
+}
+.control-panel button {
+	border: none;
+	padding: 0 16px;
+	margin: 0;
+	display: inline;
+	vertical-align: middle;
+	font-size: 32px;
+	text-shadow: 0 1px 5px #000;
+}
+.control-panel button span {
+	display: none;
+}
+.control-panel .btn-group {
+	display: inline;
+	padding: 0 8px;
+}
+.control-panel .btn-group button {
+	font-size: 48px;
+}
+.control-panel .btn-group .btnPause,
+.control-panel .btn-group .btnPlay {
+	font-size: 64px;
+}
+
+
+
+.progress-panel {
+	position: relative;
+	height: 24px;
+	padding: 8px 8px 0;
+	background: black linear-gradient(to bottom, #494a4c 0%,#2e2f30 100%); /* W3C */
+	color: #bbb;
+	border-bottom: 1px solid black;
+	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, .2);
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 16px;
+}
+.progress {
+	background-color: white;
+	margin: 2px 8px 0 8px;
+	top: 10px;
+	height: 8px;
+	padding: 1px;
+	background: linear-gradient(to bottom, #2c2d2e 0%,#303133 100%); /* W3C */
+	border-radius: 10px;
+	border: 1px solid rgba(0, 0, 0, 0.5);
+}
+.progress .bar {
+	background-color: black;
+	height: 16px;
+	height: 8px;
+	border-radius: 10px;
+	background: white linear-gradient(to right, #85ad2a 0%,#a0d028 50%,#b6d028 100%); /* W3C */
+}
+.progress-length {
+/* 	float: right; */
+}
+.progress-text {
+/* 	float: left; */
+}
+
+
+
+.volume-panel {
+	text-align: center;
+	height: 32px;
+	position: relative;
+	background: black linear-gradient(to bottom, #494a4c 0%,#2e2f30 100%); /* W3C */
+	border-top: 1px solid #666;
+	border-bottom: 1px solid #000;
+}
+.volume-panel button {
+	border: none;
+	color: white;
+	height: 32px;
+	width: 32px;
+	font-size: 24px;
+	padding: 0;
+	margin: 0;
+	text-shadow: 0 1px 5px #000;
+}
+.volume-panel button span {
+	display: none;
+}
+
+.btnVolumeDown {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+.btnVolumeUp {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.volume {
+	position: absolute;
+	top: 10px;
+	left: 48px;
+	right: 48px;
+	height: 8px;
+	padding: 1px;
+	background: linear-gradient(to bottom, #2c2d2e 0%,#303133 100%); /* W3C */
+	border-radius: 10px;
+	border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.volume .bar {
+	height: 8px;
+	border-radius: 10px;
+	background: white linear-gradient(to right, #85ad2a 0%,#a0d028 50%,#b6d028 100%); /* W3C */
+}
+
+
+
+
+.btnSettings {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.btnSettings span {
+	display: none;
+}
+.settings {
+	text-align: center;
+	padding: 8px 0;
+}
+.settings span {
+	display: none;
+}
+.settings .btn-group {
+	display: inline-block;
+	background: black linear-gradient(to bottom, #494a4c 0%,#2e2f30 100%); /* W3C */
+	border: 1px solid rgba(0, 0, 0, 0.6);
+	box-shadow: 0 1px 5px 0 rgba(0, 0, 0, .8);
+	border-radius: 10px;
+}
+.settings button {
+	border: none;
+	padding: 8px;
+	position: relative;
+	float: left;
+	white-space: nowrap;
+}
+
+.btnLoopNone,
+.btnLoopPlaylist {
+	color: #808080;
+}
+.btnLoopNone.active,
+.btnLoopPlaylist.active {
+	color: #fff;
+}
+
+
+
+
+
+/*
+
+applist
+
+*/
+.applist ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.applist li {
+	background-color: gray;
+}
+.applist a {
+	text-decoration: none;
+	display: block;
+	padding: 16px 12px;
+	margin: 0;
+}
+.applist a svg {
+	float: right;
+}
+
+
+.progress-panel {
+	display: flex;
+	flex-direction: row;
+}
+.progress-text {
+	flex: 0;
+}
+.progress {
+	flex: 1;
+}
+.progress-length {
+	flex: 0;
+}

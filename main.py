@@ -68,6 +68,7 @@ def get_application_list():
 def get_pattern(url):
 	patterns = [
 		(r'^/$', 'index'),
+		(r'^/react/(?P<filepath>.*)', 'react'),
 		(r'^/static/', 'static'),
 		(r'^/(?P<application>[\w\d]+)/art/(?P<image>[\w\d]+)', 'art'),
 		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
@@ -107,6 +108,19 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		#
 		if urlname == 'static':
 			return super(RequestHandler, self).do_GET()
+		elif urlname == 'react':
+			if self.path == '/react/':
+				requested_mimetype = "text/html"
+				with open("client/dist/index.html") as f:
+					output = f.read()
+			else:
+				if self.path[-3:] == 'css':
+					requested_mimetype = "text/css"
+				if self.path[-2:] == 'js':
+					requested_mimetype = "application/ecmascript"
+				with open(os.path.join('client','dist',urlargs['filepath'])) as f:
+					output = f.read()
+
 		#
 		# Album art
 		#
