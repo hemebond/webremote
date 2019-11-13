@@ -342,6 +342,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					return
 
 				self.send_response(200)
+				self.end_headers()
 				return
 			else:
 				for key, val in post_data.items():
@@ -352,6 +353,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						setattr(application.player, key, val)
 
 				self.send_response(200)
+				self.end_headers()
 				return
 
 		if urlname == "application":
@@ -367,6 +369,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 				response_code, response_message = self.call_method(application, action, post_data)
 
 				self.send_response(response_code, message=response_message)
+				self.end_headers()
 				return
 			else:
 				# posting new properties to the application
@@ -378,9 +381,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 						setattr(application, key, val)
 
 				self.send_response(200)
+				self.end_headers()
 				return
 
 		self.send_response(405) # Method Not Allowed
+		self.end_headers()
 		return
 
 	def get_application(self, application_name):
