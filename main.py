@@ -38,6 +38,22 @@ class PlayerNotRunning(Exception):
 	pass
 
 
+def get_art_directory(application_name):
+	user_home_dir = os.path.expanduser("~")
+
+	art_directories = {
+		'rhythmbox': os.path.join(user_home_dir, '.cache/rhythmbox/album-art'),
+		'Noise': os.path.join(user_home_dir, '.cache/noise/album-art'),
+	}
+
+	try:
+		return art_directories[application_name]
+	except KeyError as e:
+		print(e)
+		self.send_error(404, "File not found")
+		return
+
+
 def get_application_list():
 	mpris2_bus_regex = re.compile('^org\.mpris\.MediaPlayer2\.([^.]+)$')
 	bus = dbus.SessionBus()
@@ -70,7 +86,7 @@ def get_pattern(url):
 		(r'^/$', 'index'),
 		(r'^/react/(?P<filepath>.*)', 'react'),
 		(r'^/static/', 'static'),
-		(r'^/(?P<application>[\w\d]+)/art/(?P<image>[\w\d]+)', 'art'),
+		(r'^/(?P<application>[\w\d]+)/art/(?P<image>[\w\d\/]+)', 'art'),
 		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
 		(r'^/(?P<application>[\w\d]+)/player/(?P<action>\w+)?', 'player'),
 		(r'^/(?P<application>[\w\d]+)/(?P<action>\w+)?(?P<querystring>\?[\w\d\=]+)?', 'application'),
@@ -128,19 +144,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			application_name = urlargs['application']
 			filename = urlargs['image']
 
-			user_home_dir = os.path.expanduser("~")
-
-			art_directories = {
-				'rhythmbox': os.path.join(user_home_dir, '.cache/rhythmbox/album-art'),
-				'Noise': os.path.join(user_home_dir, '.cache/noise/album-art'),
-			}
-
-			try:
-				art_dir = art_directories[application_name]
-			except KeyError as e:
-				print(e)
-				self.send_error(404, "File not found")
-				return
+			art_dir = get_art_directory(application_name)
 
 			file_path = os.path.join(art_dir, filename)
 
@@ -241,9 +245,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				if 'Metadata' in output:
 					if 'mpris:artUrl' in output['Metadata']:
-						if not output['Metadata']['mpris:artUrl'].startswith("http"):
-							name = output['Metadata']['mpris:artUrl'].split("/")[-1]
-							output['Metadata']['mpris:artUrl'] = "/%s/art/%s" % (application_name, name)
+						art_dir = get_art_directory(application_name)
+						art_url = output['Metadata']['mpris:artUrl']
+
+						if not art_url.startswith("http"):
+							art_url = art_url.replace("file://", "", 1)
+							art_url = art_url.replace(art_dir, "", 1)[1:]
+							output['Metadata']['mpris:artUrl'] = '/' + '/'.join([application_name, "art", art_url])
 
 				if output['Metadata'] == {}:
 					del output['Metadata']
