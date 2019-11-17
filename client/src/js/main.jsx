@@ -9,9 +9,9 @@ import Next from './components/controls/next';
 import PlayerMetadata from './components/display/metadata';
 
 
-const VOLUMEINCREMENTSIZE = 0.1;
-const VOLUMEPRECISION = 1;
-const POLLINTERVAL = 1000; // milliseconds
+const VOLUME_INCREMENT_SIZE = 0.1;
+const VOLUME_PRECISION = 1;
+const POLL_INTERVAL = 1000; // milliseconds
 
 function positionAsPercentage(position) {
 	/*
@@ -43,7 +43,7 @@ function ProgressBar(props) {
 }
 
 
-class Player extends React.Component {
+class Player extends React.PureComponent {
 	/*
 	 *
 	 *
@@ -52,9 +52,7 @@ class Player extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {
-			player: props.player,
-		};
+		this.state = Object.assign({}, props.player);
 	}
 
 	componentDidMount() {
@@ -62,7 +60,7 @@ class Player extends React.Component {
 
 		this.timerID = setInterval(
 			() => this.tick(),
-			POLLINTERVAL
+			POLL_INTERVAL
 		);
 	}
 
@@ -70,16 +68,45 @@ class Player extends React.Component {
 		clearInterval(this.timerID);
 	}
 
+	/*
+	componentDidUpdate(prevProps, prevState) {
+	  Object.entries(this.props).forEach(([key, val]) =>
+	    prevProps[key] !== val && console.log(`Prop '${key}' changed`)
+	  );
+	  if (this.state) {
+	    Object.entries(this.state).forEach(([key, val]) =>
+	      prevState[key] !== val && console.log(`State '${key}' changed`)
+	    );
+	  }
+	}
+	*/
+
 	_fetchPlayerState() {
 		fetch(this.props.player.url, {
 			headers: {'Accept': 'application/json'}
 		})
 		.then(response => {
 			response.json()
-			.then(player => {
-				this.setState({
-					player: player,
+			.then(serverPlayerState => {
+				var newState = {};
+
+				// Compare the new server player state with our current state and only setState properties that have changed
+				Object.entries(serverPlayerState).forEach(([key, val]) => {
+					if (key === 'Metadata' && this.state.Metadata) {
+						if (val['mpris:trackid'] === this.state['Metadata']['mpris:trackid']) {
+							return;
+						}
+					}
+					else if (this.state[key] === val) {
+						return;
+					}
+
+					newState[key] = val;
 				});
+
+				if (Object.entries(newState).length !== 0 && newState.constructor === Object) {
+					this.setState(newState);
+				}
 			});
 		})
 		.catch(error => {
@@ -88,7 +115,7 @@ class Player extends React.Component {
 	}
 
 	_call(command) {
-		fetch(this.props.player.url + command, {
+		fetch(this.state.url + command, {
 			headers: {
 				'Accept': 'application/json'
 			},
@@ -100,7 +127,7 @@ class Player extends React.Component {
 	_set(data) {
 		// data: {'Shuffle': true}
 
-		fetch(this.state.player.url, {
+		fetch(this.state.url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -109,12 +136,26 @@ class Player extends React.Component {
 		});
 	}
 
-	btnShuffle = () => {
-		this._set({'Shuffle': !this.state.player.Shuffle});
+	_adjustVolume(change) {
+		var currentVolume = parseFloat(parseFloat(this.state.Volume).toPrecision(VOLUME_PRECISION));
+		var newVolume = (currentVolume + change).toPrecision(VOLUME_PRECISION);
+
+		if (newVolume < 0.0) {
+			newVolume = 0.0;
+		}
+		else if (newVolume > 1.0) {
+			newVolume = 1.0;
+		}
+
+		this.state.volume = newVolume;
+		this._set({"Volume": newVolume});
 	}
 
-	btnLoopStatus = newStatus => {
-		console.log('btnLoopStatus: ' + newStatus);
+	btnShuffle = () => {
+		this._set({'Shuffle': !this.state.Shuffle});
+	}
+
+	btnLoopStatus = newStatus => e => {
 		this._set({'LoopStatus': newStatus});
 	}
 
@@ -134,28 +175,12 @@ class Player extends React.Component {
 		this._call('Pause');
 	}
 
-	_adjustVolume(change) {
-		var p = this.state.player;
-		var currentVolume = parseFloat(parseFloat(p.Volume).toPrecision(VOLUMEPRECISION));
-		var newVolume = (currentVolume + change).toPrecision(VOLUMEPRECISION);
-
-		if (newVolume < 0.0) {
-			newVolume = 0.0;
-		}
-		else if (newVolume > 1.0) {
-			newVolume = 1.0;
-		}
-
-		this.state.volume = newVolume;
-		this._set({"Volume": newVolume});
-	}
-
 	btnVolumeUp = () => {
-		this._adjustVolume(+VOLUMEINCREMENTSIZE);
+		this._adjustVolume(+VOLUME_INCREMENT_SIZE);
 	}
 
 	btnVolumeDn = () => {
-		this._adjustVolume(-VOLUMEINCREMENTSIZE);
+		this._adjustVolume(-VOLUME_INCREMENT_SIZE);
 	}
 
 	tick() {
@@ -186,9 +211,9 @@ class Player extends React.Component {
 	}
 
 	positionAsText() {
-		if (this.state.player.Metadata !== undefined) {
-			var length = (this.state.player.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
-			var position = length * this.state.player.Position; // position in seconds
+		if (this.state.Metadata !== undefined) {
+			var length = (this.state.Metadata['mpris:length'] / 1000 / 1000); // convert from microseconds to seconds
+			var position = length * this.state.Position; // position in seconds
 
 			return this.createTimeString(position);
 		}
@@ -197,8 +222,8 @@ class Player extends React.Component {
 	};
 
 	trackLength() {
-		if (this.state.player.Metadata !== undefined) {
-			var length = this.state.player.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
+		if (this.state.Metadata !== undefined) {
+			var length = this.state.Metadata['mpris:length'] / 1000 / 1000;  // convert from microseconds to seconds
 
 			return this.createTimeString(length);
 		}
@@ -207,12 +232,11 @@ class Player extends React.Component {
 	};
 
 	render() {
-		let app = this.props.application;
-		let p = this.state.player;
-		let player = this.state.player;
-		let loopStatusNone = (player.LoopStatus == 'None') ? 'btn btnLoopNone active' : 'btn btnLoopNone';
-		let loopStatusTrack = (player.LoopStatus == 'Track') ? 'btn btnLoopTrack active' : 'btn btnLoopTrack';
-		let loopStatusPlaylist = (player.LoopStatus == 'Playlist') ? 'btn btnLoopPlaylist active' : 'btn btnLoopPlaylist';
+		const app = this.props.application;
+		const s = this.state;
+		let loopStatusNone = (s.LoopStatus == 'None') ? 'btn btnLoopNone active' : 'btn btnLoopNone';
+		let loopStatusTrack = (s.LoopStatus == 'Track') ? 'btn btnLoopTrack active' : 'btn btnLoopTrack';
+		let loopStatusPlaylist = (s.LoopStatus == 'Playlist') ? 'btn btnLoopPlaylist active' : 'btn btnLoopPlaylist';
 
 		return (
 			<div className="player">
@@ -226,44 +250,45 @@ class Player extends React.Component {
 					<h1>{ app.Identity }</h1>
 				</div>
 
-				<Volume player={p}
+				<Volume volume={this.state.Volume}
+				        canControl={s.CanControl}
 				        btnVolumeUp={this.btnVolumeUp}
 				        btnVolumeDn={this.btnVolumeDn} />
 
-				<PlayerMetadata metadata={p.Metadata} />
+				<PlayerMetadata metadata={s.Metadata} />
 
 				<div className="progress-panel">
 					<div className="progress-text">{this.positionAsText()}</div>
 					<div className="progress">
-						<ProgressBar position={p.Position}/>
+						<ProgressBar position={s.Position}/>
 					</div>
 					<div className="progress-length">{this.trackLength()}</div>
 				</div>
 
 			    <div className="btn-toolbar control-panel">
 			        <div className="btn-group">
-			            { player.CanGoPrevious && (
+			            { s.CanGoPrevious && (
 			            	<Previous clickHandler={this.btnPrevious}
-			            	          disabled={!player.CanControl} />
+			            	          disabled={!s.CanControl} />
 			            )}
-			            { (player.CanPlay && player.PlaybackStatus != 'Playing') && (
+			            { (s.CanPlay && s.PlaybackStatus != 'Playing') && (
 			            	<Play clickHandler={this.btnPlay}
-			            	      disabled={!player.CanControl} />
+			            	      disabled={!s.CanControl} />
 						)}
-			            { (player.CanPause && player.PlaybackStatus == 'Playing') && (
+			            { (s.CanPause && s.PlaybackStatus == 'Playing') && (
 			            	<Pause clickHandler={this.btnPause}
-			            	       disabled={!player.CanControl} />
+			            	       disabled={!s.CanControl} />
 			         	)}
-			            { player.CanGoNext && (
+			            { s.CanGoNext && (
 			            	<Next clickHandler={this.btnNext}
-			            	      disabled={!player.CanControl} />
+			            	      disabled={!s.CanControl} />
 			           	)}
 			        </div>
 			    </div>
 
 				<div className="settings">
 					<div className="btn-group btnLoop">
-						{ player.Shuffle
+						{ s.Shuffle
 						? (
 						<button className="btn btnShuffle"
 						        onClick={this.btnShuffle}>
@@ -271,7 +296,7 @@ class Player extends React.Component {
 							<span>Shuffling</span>
 						</button>
 						) : null }
-						{ !player.Shuffle
+						{ !s.Shuffle
 						? (
 						<button className="btn btnShuffle"
 						        onClick={this.btnShuffle}>
@@ -281,21 +306,21 @@ class Player extends React.Component {
 						) : null }
 
 						<button className={loopStatusNone}
-						        onClick={() => this.btnLoopStatus('None')}
+						        onClick={this.btnLoopStatus('None')}
 						        title="No repeat">
 							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat-none"></use></svg>
 							<span>None</span>
 						</button>
 
 						<button className={loopStatusTrack}
-						        onClick={() => this.btnLoopStatus('Track')}
+						        onClick={this.btnLoopStatus('Track')}
 						        title="Repeat track">
 							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat-one"></use></svg>
 							<span>Track</span>
 						</button>
 
 						<button className={loopStatusPlaylist}
-						        onClick={() => this.btnLoopStatus('Playlist')}
+						        onClick={this.btnLoopStatus('Playlist')}
 						        title="Repeat playlist">
 							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat-all"></use></svg>
 							<span>Playlist</span>
@@ -495,7 +520,7 @@ class WebRemoteApplication extends React.Component {
 				mprisPlayer: null,
 				activeComponent: '',
 			});
-
+			this._fetchMprisAppList();
 			return;
 		}
 
@@ -519,16 +544,12 @@ class WebRemoteApplication extends React.Component {
 	}
 
 	openTracklist = () => {
-		console.log("openTracklist");
-
 		this.setState({
 			activeComponent: 'tracklist',
 		});
 	}
 
 	openPlaylists = () => {
-		console.log("openPlaylists");
-
 		this.setState({
 			activeComponent: 'playlists',
 		});
@@ -555,7 +576,6 @@ class WebRemoteApplication extends React.Component {
 	}
 
 	btnBack = () => {
-		console.log('back button');
 		// this should remove the top state from the appState stack/list
 		if (this.state.activeComponent == 'player') {
 			this.openMprisApp(null);

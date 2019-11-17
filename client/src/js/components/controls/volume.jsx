@@ -1,30 +1,30 @@
 import React from 'react'
 
 function VolumeBar(props) {
-	let volume = {width: (props.player.Volume * 100) + '%'};
+	var volumeStyle = {width: (props.volume * 100) + '%'};
 	return (
 		<div className="volume">
-			<div className="bar" style={volume}></div>
+			<div className="bar" style={volumeStyle}></div>
 		</div>
 	)
 }
 
-const Volume = ({player, btnVolumeUp, btnVolumeDn}) => (
+const Volume = ({volume, canControl, btnVolumeUp, btnVolumeDn}) => (
 	<div className="volume-panel">
 		<button className="btn btnVolumeDown"
 		        onClick={btnVolumeDn}
-		        disabled={!player.CanControl}>
+		        disabled={!canControl}>
 			<svg aria-hidden="true" focusable="false" className="svg-icon">
 				<use xlinkHref="#volume-down"></use>
 			</svg>
 			<span>Decrease</span>
 		</button>
 
-		<VolumeBar player={player} />
+		<VolumeBar volume={volume} />
 
 		<button className="btn btnVolumeUp"
 		        onClick={btnVolumeUp}
-		        disabled={!player.CanControl}>
+		        disabled={!canControl}>
 			<svg aria-hidden="true" focusable="false" className="svg-icon">
 				<use xlinkHref="#volume-up"></use>
 			</svg>
