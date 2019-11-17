@@ -1,6 +1,5 @@
 const path = require('path');
 const production = process.env.NODE_ENV === 'production';
-var HtmlMinifierPlugin = require('html-minifier-webpack-plugin');
 
 module.exports = {
   mode: "production",
@@ -18,33 +17,10 @@ module.exports = {
         use: {
           loader: "babel-loader"
         }
-      },
-      /*
-      {
-        test: /\.html$/,
-        use: [
-          {
-            loader: 'file-loader?name=[name].html'
-          },
-          {
-            loader: 'extract-loader'
-          },
-          {
-            loader: 'html-loader'
-          }
-        ]
       }
-      */
     ]
   },
   resolve: {
     extensions: ['*', '.js', '.jsx']
-  },
-  /*
-  plugins: [
-    new HtmlMinifierPlugin({
-      // HTMLMinifier options
-    })
-  ]
-  */
+  }
 };

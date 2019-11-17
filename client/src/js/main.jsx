@@ -35,7 +35,7 @@ function ProgressBar(props) {
 	 *
 	 *
 	 */
-	let progress = {width: positionAsPercentage(props.player.Position) + '%'}
+	const progress = {width: positionAsPercentage(props.position) + '%'}
 
 	return (
 		<div className="bar" style={progress}></div>
@@ -109,31 +109,32 @@ class Player extends React.Component {
 		});
 	}
 
-	btnShuffle() {
+	btnShuffle = () => {
 		this._set({'Shuffle': !this.state.player.Shuffle});
 	}
 
-	btnLoopStatus(newStatus) {
+	btnLoopStatus = newStatus => {
+		console.log('btnLoopStatus: ' + newStatus);
 		this._set({'LoopStatus': newStatus});
 	}
 
-	btnPrevious() {
+	btnPrevious = () => {
 		this._call('Previous');
 	}
 
-	btnNext() {
+	btnNext = () => {
 		this._call('Next');
 	}
 
-	btnPlay() {
+	btnPlay = () => {
 		this._call('Play');
 	}
 
-	btnPause() {
+	btnPause = () => {
 		this._call('Pause');
 	}
 
-	adjustVolume(change) {
+	_adjustVolume(change) {
 		var p = this.state.player;
 		var currentVolume = parseFloat(parseFloat(p.Volume).toPrecision(VOLUMEPRECISION));
 		var newVolume = (currentVolume + change).toPrecision(VOLUMEPRECISION);
@@ -149,12 +150,12 @@ class Player extends React.Component {
 		this._set({"Volume": newVolume});
 	}
 
-	btnVolumeUp() {
-		this.adjustVolume(+VOLUMEINCREMENTSIZE);
+	btnVolumeUp = () => {
+		this._adjustVolume(+VOLUMEINCREMENTSIZE);
 	}
 
-	btnVolumeDn() {
-		this.adjustVolume(-VOLUMEINCREMENTSIZE);
+	btnVolumeDn = () => {
+		this._adjustVolume(-VOLUMEINCREMENTSIZE);
 	}
 
 	tick() {
@@ -210,6 +211,7 @@ class Player extends React.Component {
 		let p = this.state.player;
 		let player = this.state.player;
 		let loopStatusNone = (player.LoopStatus == 'None') ? 'btn btnLoopNone active' : 'btn btnLoopNone';
+		let loopStatusTrack = (player.LoopStatus == 'Track') ? 'btn btnLoopTrack active' : 'btn btnLoopTrack';
 		let loopStatusPlaylist = (player.LoopStatus == 'Playlist') ? 'btn btnLoopPlaylist active' : 'btn btnLoopPlaylist';
 
 		return (
@@ -225,15 +227,15 @@ class Player extends React.Component {
 				</div>
 
 				<Volume player={p}
-				        btnVolumeUp={() => this.btnVolumeUp()}
-				        btnVolumeDn={() => this.btnVolumeDn()} />
+				        btnVolumeUp={this.btnVolumeUp}
+				        btnVolumeDn={this.btnVolumeDn} />
 
 				<PlayerMetadata metadata={p.Metadata} />
 
 				<div className="progress-panel">
 					<div className="progress-text">{this.positionAsText()}</div>
 					<div className="progress">
-						<ProgressBar player={p}/>
+						<ProgressBar position={p.Position}/>
 					</div>
 					<div className="progress-length">{this.trackLength()}</div>
 				</div>
@@ -241,19 +243,19 @@ class Player extends React.Component {
 			    <div className="btn-toolbar control-panel">
 			        <div className="btn-group">
 			            { player.CanGoPrevious && (
-			            	<Previous clickHandler={() => this.btnPrevious()}
+			            	<Previous clickHandler={this.btnPrevious}
 			            	          disabled={!player.CanControl} />
 			            )}
 			            { (player.CanPlay && player.PlaybackStatus != 'Playing') && (
-			            	<Play clickHandler={() => this.btnPlay()}
+			            	<Play clickHandler={this.btnPlay}
 			            	      disabled={!player.CanControl} />
 						)}
 			            { (player.CanPause && player.PlaybackStatus == 'Playing') && (
-			            	<Pause clickHandler={() => this.btnPause()}
+			            	<Pause clickHandler={this.btnPause}
 			            	       disabled={!player.CanControl} />
 			         	)}
 			            { player.CanGoNext && (
-			            	<Next clickHandler={() => this.btnNext()}
+			            	<Next clickHandler={this.btnNext}
 			            	      disabled={!player.CanControl} />
 			           	)}
 			        </div>
@@ -264,7 +266,7 @@ class Player extends React.Component {
 						{ player.Shuffle
 						? (
 						<button className="btn btnShuffle"
-						        onClick={() => this.btnShuffle()}>
+						        onClick={this.btnShuffle}>
 							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#shuffle"></use></svg>
 							<span>Shuffling</span>
 						</button>
@@ -272,7 +274,7 @@ class Player extends React.Component {
 						{ !player.Shuffle
 						? (
 						<button className="btn btnShuffle"
-						        onClick={() => this.btnShuffle()}>
+						        onClick={this.btnShuffle}>
 							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat-none"></use></svg>
 							<span>No Shuffle</span>
 						</button>
@@ -285,10 +287,17 @@ class Player extends React.Component {
 							<span>None</span>
 						</button>
 
+						<button className={loopStatusTrack}
+						        onClick={() => this.btnLoopStatus('Track')}
+						        title="Repeat track">
+							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat-one"></use></svg>
+							<span>Track</span>
+						</button>
+
 						<button className={loopStatusPlaylist}
 						        onClick={() => this.btnLoopStatus('Playlist')}
 						        title="Repeat playlist">
-							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat"></use></svg>
+							<svg aria-hidden="true" focusable="false" className="svg-icon"><use xlinkHref="#repeat-all"></use></svg>
 							<span>Playlist</span>
 						</button>
 
@@ -456,7 +465,11 @@ class WebRemoteApplication extends React.Component {
 		}
 	}
 
-	fetchMprisAppList() {
+	componentDidMount() {
+		this._fetchMprisAppList();
+	}
+
+	_fetchMprisAppList() {
 		fetch('/', {headers: {'Accept': 'application/json'}})
 		.then(response => {
 			response.json()
@@ -474,7 +487,7 @@ class WebRemoteApplication extends React.Component {
 		});
 	}
 
-	openMprisApp(appName) {
+	openMprisApp = appName => {
 		if (!this.state.mprisAppList.hasOwnProperty(appName)) {
 			this.setState({
 				mprisAppName: null,
@@ -505,7 +518,7 @@ class WebRemoteApplication extends React.Component {
 		});
 	}
 
-	openTracklist() {
+	openTracklist = () => {
 		console.log("openTracklist");
 
 		this.setState({
@@ -513,7 +526,7 @@ class WebRemoteApplication extends React.Component {
 		});
 	}
 
-	openPlaylists() {
+	openPlaylists = () => {
 		console.log("openPlaylists");
 
 		this.setState({
@@ -533,19 +546,16 @@ class WebRemoteApplication extends React.Component {
 		})
 	}
 
-	componentDidMount() {
-		this.fetchMprisAppList();
-	}
-
-	btnRaise() {
+	btnRaise = () => {
 		this._call(this.state.mprisApp.url, 'Raise');
 	}
 
-	btnQuit() {
+	btnQuit = () => {
 		this._call(this.state.mprisApp.url, 'Quit');
 	}
 
-	btnBack() {
+	btnBack = () => {
+		console.log('back button');
 		// this should remove the top state from the appState stack/list
 		if (this.state.activeComponent == 'player') {
 			this.openMprisApp(null);
@@ -561,26 +571,26 @@ class WebRemoteApplication extends React.Component {
 		return (
 			<div className={"app " + this.state.activeComponent}>
 				<MprisAppList apps={this.state.mprisAppList}
-				              openApp={this.openMprisApp.bind(this)} />
+				              openApp={this.openMprisApp} />
 
 				{this.state.mprisPlayer && (
 				<Player application={this.state.mprisApp}
 				        player={this.state.mprisPlayer}
-				        btnBack={() => this.btnBack()}
-				        btnRaise={() => this.btnRaise()}
-				        btnQuit={() => this.btnQuit()}
-				        openTracklist={() => this.openTracklist()}
-				        openPlaylists={() => this.openPlaylists()}
+				        btnBack={this.btnBack}
+				        btnRaise={this.btnRaise}
+				        btnQuit={this.btnQuit}
+				        openTracklist={this.openTracklist}
+				        openPlaylists={this.openPlaylists}
 				        />
 				)}
 
 
 				{this.state.mprisApp && (
-					<MprisPlayLists btnBack={() => this.btnBack()} />
+					<MprisPlayLists btnBack={this.btnBack} />
 				)}
 
 				{this.state.mprisApp !== null && (
-					<MprisTrackList btnBack={() => this.btnBack()} />
+					<MprisTrackList btnBack={this.btnBack} />
 				)}
 			</div>
 		);

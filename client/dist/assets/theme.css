@@ -359,10 +359,12 @@ h1 {
 }
 
 .btnLoopNone,
+.btnLoopTrack,
 .btnLoopPlaylist {
 	color: #808080;
 }
 .btnLoopNone.active,
+.btnLoopTrack.active,
 .btnLoopPlaylist.active {
 	color: #fff;
 }
