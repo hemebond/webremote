@@ -85,7 +85,7 @@ class Player(object):
 			metadata = self.get_property("Metadata")
 
 			if 'mpris:length' in metadata:
-				if property_value != None && float(metadata['mpris:length']) > 0:
+				if property_value != None and float(metadata['mpris:length']) > 0:
 					property_value = float(property_value) / float(metadata['mpris:length'])
 				else:
 					property_value = 0
