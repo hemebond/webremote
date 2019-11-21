@@ -24,6 +24,7 @@
 import os
 import socket
 import argparse
+import mimetypes
 import re, dbus, json, mpris2
 
 from http.server import HTTPServer  # BaseHTTPRequestHandler
@@ -84,8 +85,7 @@ def get_application_list():
 def get_pattern(url):
 	patterns = [
 		(r'^/$', 'index'),
-		(r'^/react/(?P<filepath>.*)', 'react'),
-		(r'^/static/', 'static'),
+		(r'^/assets/', 'assets'),
 		(r'^/(?P<application>[\w\d]+)/art/(?P<image>[\w\d\/]+)', 'art'),
 		(r'^/(?P<application>[\w\d]+)/playlists/', 'playlists'),
 		(r'^/(?P<application>[\w\d]+)/player/(?P<action>\w+)?', 'player'),
@@ -116,26 +116,20 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			self.send_error(404, "File not found")
 
 		accept_header = self.headers.get("accept")
+
 		if "application/json" in accept_header:
 			requested_mimetype = "application/json"
 
 		#
 		# Static files
 		#
-		if urlname == 'static':
-			return super(RequestHandler, self).do_GET()
-		elif urlname == 'react':
-			if self.path == '/react/':
-				requested_mimetype = "text/html"
-				with open("client/dist/index.html") as f:
-					output = f.read()
-			else:
-				if self.path[-3:] == 'css':
-					requested_mimetype = "text/css"
-				if self.path[-2:] == 'js':
-					requested_mimetype = "application/ecmascript"
-				with open(os.path.join('client','dist',urlargs['filepath'])) as f:
-					output = f.read()
+		if urlname == 'assets':
+			local_file_path = os.path.join('client', 'dist', self.path.strip('/'))
+
+			requested_mimetype, _ = mimetypes.guess_type(local_file_path)
+
+			with open(local_file_path) as f:
+				output = f.read()
 
 		#
 		# Album art
@@ -294,9 +288,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		# Index
 		#
 		else:
-			requested_mimetype = "text/html"
+			requested_mimetype = 'text/html'
 			#return SimpleHTTPRequestHandler.do_GET(self)
-			with open("index.html") as f:
+			with open(os.path.join('client', 'dist', 'index.html')) as f:
 				output = f.read()
 
 			# reset the response cache for this user
@@ -306,12 +300,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		if output is not None:
 			self.send_response(200)
 			self.send_header('Content-Type', requested_mimetype)
-			self.send_header('Cache-Control', "no-store")
+			self.send_header('Cache-Control', 'no-store')
 			self.end_headers()
 
 			# Send the html message
 			try:
-				self.wfile.write(output.encode("UTF-8"))
+				self.wfile.write(output.encode('UTF-8'))
 				self.wfile.write(bytes("\n", 'UTF-8'))
 			except BrokenPipeError as e:
 				pass
