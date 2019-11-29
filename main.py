@@ -34,52 +34,11 @@ from datetime import datetime
 
 import imghdr
 
+from server_utils import get_art_directory, get_application_list
+
 
 class PlayerNotRunning(Exception):
 	pass
-
-
-def get_art_directory(application_name):
-	user_home_dir = os.path.expanduser("~")
-
-	art_directories = {
-		'rhythmbox': os.path.join(user_home_dir, '.cache/rhythmbox/album-art'),
-		'Noise': os.path.join(user_home_dir, '.cache/noise/album-art'),
-	}
-
-	try:
-		return art_directories[application_name]
-	except KeyError as e:
-		print(e)
-		self.send_error(404, "File not found")
-		return
-
-
-def get_application_list():
-	mpris2_bus_regex = re.compile('^org\.mpris\.MediaPlayer2\.([^.]+)$')
-	bus = dbus.SessionBus()
-	bus_names = bus.list_names()
-	applications = []
-
-	for path in bus_names:
-		match = mpris2_bus_regex.match(path)
-
-		if match:
-			application = mpris2.Application(path)
-			name = match.group(1)
-
-			applications.append({
-				'name': name,
-				'url': "/%s/" % name,
-				'Identity': application.Identity,
-				'bus': path,
-				'player': {
-					'url': "/%s/player/" % name,
-					'PlaybackStatus': application.player.PlaybackStatus,
-				}
-			})
-
-	return applications
 
 
 def get_pattern(url):
@@ -138,7 +97,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			application_name = urlargs['application']
 			filename = urlargs['image']
 
-			art_dir = get_art_directory(application_name)
+			try:
+				art_dir = get_art_directory(application_name)
+			except KeyError:
+				# No art directory for this application
+				self.send_error(404, "File not found")
 
 			file_path = os.path.join(art_dir, filename)
 
@@ -239,13 +202,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 				if 'Metadata' in output:
 					if 'mpris:artUrl' in output['Metadata']:
-						art_dir = get_art_directory(application_name)
-						art_url = output['Metadata']['mpris:artUrl']
+						try:
+							art_dir = get_art_directory(application_name)
+							art_url = output['Metadata']['mpris:artUrl']
 
-						if not art_url.startswith("http"):
-							art_url = art_url.replace("file://", "", 1)
-							art_url = art_url.replace(art_dir, "", 1)[1:]
-							output['Metadata']['mpris:artUrl'] = '/' + '/'.join([application_name, "art", art_url])
+							if not art_url.startswith("http"):
+								art_url = art_url.replace("file://", "", 1)
+								art_url = art_url.replace(art_dir, "", 1)[1:]
+								output['Metadata']['mpris:artUrl'] = '/' + '/'.join([application_name, "art", art_url])
+						except KeyError:
+							# No art directory for this application
+							pass
 
 				if output['Metadata'] == {}:
 					del output['Metadata']
