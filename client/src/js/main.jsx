@@ -86,6 +86,11 @@ class Player extends React.PureComponent {
 			headers: {'Accept': 'application/json'}
 		})
 		.then(response => {
+			if (!response.ok) {
+				this.props.btnBack();
+				return;
+			}
+
 			response.json()
 			.then(serverPlayerState => {
 				var newState = {};
